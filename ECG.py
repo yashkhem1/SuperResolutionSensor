@@ -61,7 +61,7 @@ def sr_gen_model(inp_shape, r):  # Assuming r to be a multiple of 2
         nn = Conv1D(64, 3, 1, padding='same', kernel_initializer='he_normal')(n)
         nn = BatchNormalization()(nn)
         nn = Activation('relu')(nn)
-        nn = Conv1D(64, 3, 1, padding='same', kernel_initializer='he_normal')(n)
+        nn = Conv1D(64, 3, 1, padding='same', kernel_initializer='he_normal')(nn)
         nn = BatchNormalization()(nn)
         nn = Add()([n, nn])
         n = nn

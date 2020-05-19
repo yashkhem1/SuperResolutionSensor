@@ -53,16 +53,19 @@ def read_test_data(data_type):
 
         return test_X,test_Y
 
-def train_cf_dataset(data_type,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2):
+def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2):
     '''
     Returns the train dataset for classification model
     :param data_type: str
+    :param sampling_ratio: int
     :param batch_size: int
     :param shuffle_buffer_size: int
     :param buffer_size: int
     :return: Tensorflow Dataset
     '''
     train_X,train_Y = read_train_data(data_type)
+    #downsample the high resolution data
+    train_X = train_X[:, ::sampling_ratio, :]
 
     #defining the generator to generate dataset
     def generator():
@@ -75,15 +78,18 @@ def train_cf_dataset(data_type,batch_size,shuffle_buffer_size=1000,fetch_buffer_
     train_ds = train_ds.batch(batch_size)
     return train_ds
 
-def test_cf_dataset(data_type,batch_size,fetch_buffer_size=2):
+def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
     '''
     Returns the test dataloader for classification model
     :param data_type: str
+    :param sampling_ratio: int
     :param batch_size: int
     :param fetch_buffer_size: int
     :return: Tensorflow Dataset
     '''
     test_X, test_Y = read_test_data(data_type)
+    #downsample the high resolution data
+    test_X = test_X[:, ::sampling_ratio, :]
 
     # defining the generator to generate dataset
     def generator():
