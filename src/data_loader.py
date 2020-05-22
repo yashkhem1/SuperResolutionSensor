@@ -19,7 +19,7 @@ def get_class_weights(data_type):
     :return: List[float]
     '''
     if data_type == 'ecg':
-        train_data = pd.read_csv('data/mitbih_train.csv')
+        train_data = np.array(pd.read_csv('data/mitbih_train.csv'))
         w0 = len(train_data) / len(train_data[train_data[:, -1] == 0])
         w1 = len(train_data) / len(train_data[train_data[:, -1] == 1])
         w2 = len(train_data) / len(train_data[train_data[:, -1] == 2])
