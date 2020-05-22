@@ -42,7 +42,7 @@ def read_train_data(data_type,resample=False):
         train_data = pd.read_csv('data/mitbih_train.csv')
         train_data = np.array(train_data)
         if resample:
-            data_0 = train_data[train_data[:, -1] == 0].sample(n=20000,random_state=42)
+            data_0 = np.random.choice(train_data[train_data[:, -1] == 0],20000,replace=False)
             data_1 = train_data[train_data[:, -1] == 1]
             data_2 = train_data[train_data[:, -1] == 2]
             data_3 = train_data[train_data[:, -1] == 3]
