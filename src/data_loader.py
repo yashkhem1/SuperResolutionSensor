@@ -39,7 +39,8 @@ def read_train_data(data_type,resample=False):
     '''
     if data_type == 'ecg':
         # read data from csv files
-        train_data = pd.read_csv('../data/mitbih_train.csv')
+        train_data = pd.read_csv('data/mitbih_train.csv')
+        train_data = np.array(train_data)
         if resample:
             data_0 = train_data[train_data[:, -1] == 0].sample(n=20000,random_state=42)
             data_1 = train_data[train_data[:, -1] == 1]
@@ -55,8 +56,8 @@ def read_train_data(data_type,resample=False):
             train_data = np.concatenate(data_0,data_1_upsample,data_2_upsample,data_3_upsample,data_4_upsample)
 
         np.random.shuffle(train_data)
-        train_X =np.array(train_data)[:, :-1]
-        train_Y = np.array(train_data)[:, -1].astype(int)
+        train_X =train_data[:, :-1]
+        train_Y = train_data[:, -1]
         train_Y = tf.keras.utils.to_categorical(train_Y,num_classes=5)
 
         # converting the X data to 1 channel data
@@ -76,9 +77,9 @@ def read_test_data(data_type):
 
     if data_type=='ecg':
         # read data from csv files
-        test_data = pd.read_csv('../data/mitbih_test.csv')
+        test_data = pd.read_csv('data/mitbih_test.csv')
         test_X = np.array(test_data)[:, :-1]
-        test_Y = np.array(test_data)[:, -1].astype(int)
+        test_Y = np.array(test_data)[:, -1]
         test_Y = tf.keras.utils.to_categorical(test_Y, num_classes=5)
 
         # converting the X data to 1 channel data
@@ -109,7 +110,7 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
         for i in range(len(train_X)):
             yield train_X[i],train_Y[i]
 
-    train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.int32))
+    train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32))
     train_ds = train_ds.shuffle(shuffle_buffer_size)
     train_ds = train_ds.prefetch(buffer_size=fetch_buffer_size)
     train_ds = train_ds.batch(batch_size)
@@ -133,7 +134,7 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
         for i in range(len(test_X)):
             yield test_X[i], test_Y[i]
 
-    test_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.int32))
+    test_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32))
     test_ds = test_ds.prefetch(buffer_size=fetch_buffer_size)
     test_ds = test_ds.batch(batch_size)
     return test_ds

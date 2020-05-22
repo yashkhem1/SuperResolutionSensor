@@ -31,6 +31,7 @@ def train_clf(opt):
         nclasses =  5
         C = clf_model_func('ecg')(inp_shape,nclasses)
 
+    print(C.summary())
     lr_v = tf.Variable(opt.init_lr)
     c_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
 
@@ -44,8 +45,8 @@ def train_clf(opt):
 
 
     for epoch in range(opt.epochs):
-        y_true_train = []
-        y_pred_train = []
+        y_true_train = np.array([],dtype='int32')
+        y_pred_train = np.array([],dtype='int32')
         for step, (X, y_true) in enumerate(train_ds):
             if X.shape[0] < opt.train_batch_size:
                 break
@@ -55,44 +56,56 @@ def train_clf(opt):
                 if opt.weighted:
                     class_weights = get_class_weights(opt.data_type)
                 else:
-                    class_weights = np.array(1.0/nclasses)
+                    class_weights = np.array([1.0/nclasses]*nclasses)
 
+                # print(class_weights)
+                # print(y_true)
                 weights = tf.reduce_sum(class_weights*y_true,axis=1)
                 unweighted_loss = tf.nn.softmax_cross_entropy_with_logits(y_true,y_pred)
+                # print(weights)
+                # print(unweighted_loss)
                 loss = weights*unweighted_loss
                 loss = tf.reduce_mean(loss)
 
             grad = tape.gradient(loss, C.trainable_weights)
             c_optimizer.apply_gradients(zip(grad, C.trainable_weights))
-            y_true_train.append(np.argmax(y_true,axis=1))
-            y_pred_train.append(np.argmax(y_pred,axis=1))
+            y_true_train = np.append(y_true_train,np.argmax(y_true,axis=1))
+            y_pred_train = np.append(y_pred_train,np.argmax(y_pred,axis=1))
 
             print(
                 "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, cross_entropy_loss:{:.6f} ".format(
                     epoch, opt.epochs, step, n_steps_train, time.time() - step_time, loss))
 
+        # print(y_true_train)
+        # print(y_pred_train)
         accuracy_train = accuracy_score(y_true_train,y_pred_train)
-        f1_train = f1_score(y_true_train,y_pred_train)
+        f1_train = f1_score(y_true_train,y_pred_train,average='weighted')
         print("Epoch: [{}/{}]  accuracy:{:.6f}, f1_score:{:.6f} ".format(
                     epoch, opt.epochs, accuracy_train, f1_train))
 
-        y_true_test = []
-        y_pred_test = []
+        #Update Learning Rate
+        if epoch != 0 and (epoch % opt.decay_every == 0):
+            new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
+            lr_v.assign(opt.lr_init * new_lr_decay)
+            print("New learning rate", opt.lr_init * new_lr_decay)
+
+        y_true_test = np.array([],dtype='int32')
+        y_pred_test = np.array([],dtype='int32')
         for step, (X, y_true) in enumerate(test_ds):
             step_time = time.time()
             y_pred = C(X, training=False)
-            y_true_test.append(np.argmax(y_true,axis=1))
-            y_pred_test.append(np.argmax(y_pred,axis=1))
+            y_true_test = np.append(y_true_test,np.argmax(y_true,axis=1))
+            y_pred_test = np.append(y_pred_test,np.argmax(y_pred,axis=1))
             print("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
                 epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
 
         accuracy_test = accuracy_score(y_true_test,y_pred_test)
-        f1_test = f1_score(y_true_test,y_pred_test)
+        f1_test = f1_score(y_true_test,y_pred_test,average='weighted')
         print("Epoch: [{}/{}] test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, accuracy_test, f1_test))
-        if f1_test > prev_best:
+        if accuracy_test > prev_best:
             C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '.pt'))
             print('Saving Best generator with best accuracy:', accuracy_test, 'and F1 score:', f1_test)
-            prev_best = f1_test
+            prev_best = accuracy_test
         C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '.pt'))
 
 
