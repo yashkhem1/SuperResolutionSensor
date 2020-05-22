@@ -114,8 +114,39 @@ def ecg_clf_model(inp_shape,nclasses):
     n = Dense(256)(n)
     n = PReLU()(n)
     n = Dense(nclasses)(n)
-    n = Activation('softmax')(n)
 
     clf = Model(inputs=inp, outputs=n, name='Classifier')
     return clf
+
+
+def sr_model_func(data_type):
+    '''
+    Returns super resolution model architecture for the given data type
+    :param data_type: str
+    :return: Function that returns Keras Model
+    '''
+    if data_type=='ecg':
+        return ecg_sr_model
+
+def disc_model_func(data_type):
+    '''
+    Returns discriminator model architecture for the given data type
+    :param data_type: str
+    :return: Function that returns Keras Model
+    '''
+    if data_type=='ecg':
+        return ecg_disc_model
+
+
+def clf_model_func(data_type):
+    '''
+    Returns discriminator model architecture for the given data type
+    :param data_type: str
+    :return: Function that returns Keras Model
+    '''
+    if data_type=='ecg':
+        return ecg_clf_model
+
+
+
 
