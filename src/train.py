@@ -87,7 +87,7 @@ def train_clf(opt):
         #Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
-            lr_v.assign(opt.lr_init * new_lr_decay)
+            lr_v.assign(opt.init_lr * new_lr_decay)
             print("New learning rate", opt.lr_init * new_lr_decay)
 
         y_true_test = np.array([],dtype='int32')
@@ -170,6 +170,12 @@ def train_sr(opt):
         train_task_loss = accuracy_score(y_true_train,y_pred_train)
         print("Epoch: [{}/{}]  mse:{:.6f}, task_loss:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_loss))
+
+        # Update Learning Rate
+        if epoch != 0 and (epoch % opt.decay_every == 0):
+            new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
+            lr_v.assign(opt.init_lr * new_lr_decay)
+            print("New learning rate", opt.lr_init * new_lr_decay)
 
         x_true_test = np.array([])
         x_pred_test = np.array([])
