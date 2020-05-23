@@ -43,6 +43,10 @@ def train_clf(opt):
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
 
+    if opt.weighted:
+        class_weights = get_class_weights(opt.data_type)
+    else:
+        class_weights = np.array([1.0 / nclasses] * nclasses)
 
     for epoch in range(opt.epochs):
         y_true_train = np.array([],dtype='int32')
@@ -53,11 +57,6 @@ def train_clf(opt):
             step_time = time.time()
             with tf.GradientTape(persistent=True) as tape:
                 y_pred = C(X)
-                if opt.weighted:
-                    class_weights = get_class_weights(opt.data_type)
-                else:
-                    class_weights = np.array([1.0/nclasses]*nclasses)
-
                 # print(class_weights)
                 # print(y_true)
                 weights = tf.reduce_sum(class_weights*y_true,axis=1)

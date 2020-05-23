@@ -31,7 +31,7 @@ def get_class_weights(data_type):
 
 
 
-def read_train_data(data_type,resample=False):
+def read_train_data(data_type,rs=False):
     '''
     Read the train and test data for the corresponding data type
     :param data_type: str
@@ -39,22 +39,22 @@ def read_train_data(data_type,resample=False):
     '''
     if data_type == 'ecg':
         # read data from csv files
-        train_data = pd.read_csv('data/mitbih_train.csv')
-        train_data = np.array(train_data)
-        if resample:
-            data_0 = np.random.choice(train_data[train_data[:, -1] == 0],20000,replace=False)
-            data_1 = train_data[train_data[:, -1] == 1]
-            data_2 = train_data[train_data[:, -1] == 2]
-            data_3 = train_data[train_data[:, -1] == 3]
-            data_4 = train_data[train_data[:, -1] == 4]
+        train_data = pd.read_csv('data/mitbih_train.csv',header=None)
+        if rs:
+            data_0 = train_data[train_data[187] == 0].sample(n=20000,random_state=122)
+            data_1 = train_data[train_data[187] == 1]
+            data_2 = train_data[train_data[187] == 2]
+            data_3 = train_data[train_data[187] == 3]
+            data_4 = train_data[train_data[187] == 4]
 
             data_1_upsample = resample(data_1, replace=True, n_samples=20000, random_state=123)
             data_2_upsample = resample(data_2, replace=True, n_samples=20000, random_state=124)
             data_3_upsample = resample(data_3, replace=True, n_samples=20000, random_state=125)
             data_4_upsample = resample(data_4, replace=True, n_samples=20000, random_state=126)
 
-            train_data = np.concatenate(data_0,data_1_upsample,data_2_upsample,data_3_upsample,data_4_upsample)
+            train_data = pd.concat([data_0,data_1_upsample,data_2_upsample,data_3_upsample,data_4_upsample])
 
+        train_data = np.array(train_data)
         np.random.shuffle(train_data)
         train_X =train_data[:, :-1]
         train_Y = train_data[:, -1]
@@ -77,7 +77,7 @@ def read_test_data(data_type):
 
     if data_type=='ecg':
         # read data from csv files
-        test_data = pd.read_csv('data/mitbih_test.csv')
+        test_data = pd.read_csv('data/mitbih_test.csv',header=None)
         test_X = np.array(test_data)[:, :-1]
         test_Y = np.array(test_data)[:, -1]
         test_Y = tf.keras.utils.to_categorical(test_Y, num_classes=5)
