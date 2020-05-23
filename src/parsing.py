@@ -26,6 +26,9 @@ class Options:
         self.parser.add_argument('--model_type', type=str, help='Train_Type')
         self.parser.add_argument('--save_dir', type=str, default='ckpt',help='Directory for saving model')
         self.parser.add_argument('--use_perception_loss', type=int, default=0, help='Use perception loss')
+        self.parser.add_argument('--sampling_ratio', type=int, default=1, help='Downsampling factor')
+        self.parser.add_argument('--classifier_path', type=str, default='',
+                                 help='Path to classification model for task based loss')
 
 
     def _print(self):

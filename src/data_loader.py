@@ -103,7 +103,8 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
     '''
     train_X,train_Y = read_train_data(data_type,resample)
     #downsample the high resolution data
-    train_X = train_X[:, ::sampling_ratio, :]
+    if data_type == 'ecg':
+        train_X = train_X[:, ::sampling_ratio, :]
 
     #defining the generator to generate dataset
     def generator():
@@ -127,7 +128,8 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
     '''
     test_X, test_Y = read_test_data(data_type)
     #downsample the high resolution data
-    test_X = test_X[:, ::sampling_ratio, :]
+    if data_type == 'ecg':
+        test_X = test_X[:, ::sampling_ratio, :]
 
     # defining the generator to generate dataset
     def generator():
@@ -150,14 +152,15 @@ def train_sr_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
     :param resample: bool
     :return: Tensorflow Dataset
     '''
-    train_X, _ = read_train_data(data_type,resample)
+    train_X, train_Y = read_train_data(data_type,resample)
     #downsampling the high resolution dataset
-    train_X_r = train_X[:, ::sampling_ratio, :]
+    if data_type == 'ecg':
+        train_X_r = train_X[:, ::sampling_ratio, :]
 
     # defining the generator to generate dataset
     def generator():
         for i in range(len(train_X)):
-            yield train_X_r[i], train_X[i]
+            yield train_X_r[i], train_X[i], train_Y[i]
 
     train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32))
     train_ds = train_ds.shuffle(shuffle_buffer_size)
@@ -175,14 +178,15 @@ def test_sr_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
     :param fetch_buffer_size: int
     :return: Tensorflow Dataset
     '''
-    test_X,_ = read_test_data(data_type)
+    test_X, test_Y = read_test_data(data_type)
     # downsampling the high resolution dataset
-    test_X_r = test_X[:, ::sampling_ratio, :]
+    if data_type=='ecg':
+        test_X_r = test_X[:, ::sampling_ratio, :]
 
     # defining the generator to generate dataset
     def generator():
         for i in range(len(test_X)):
-            yield test_X_r[i], test_X[i]
+            yield test_X_r[i], test_X[i], test_Y[i]
 
     test_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32))
     test_ds = test_ds.prefetch(buffer_size=fetch_buffer_size)
