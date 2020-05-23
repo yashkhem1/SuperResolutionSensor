@@ -146,7 +146,7 @@ def train_sr(opt):
                 break
             step_time = time.time()
             with tf.GradientTape(persistent=True) as tape:
-                hr_f = G(lr,training=False)
+                hr_f = G(lr,training=True)
                 loss_mse = MeanSquaredError()(hr,hr_f)
                 loss_pr = 0
                 if opt.use_perception_loss:

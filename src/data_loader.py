@@ -162,7 +162,7 @@ def train_sr_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
         for i in range(len(train_X)):
             yield train_X_r[i], train_X[i], train_Y[i]
 
-    train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32))
+    train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32,tf.float32))
     train_ds = train_ds.shuffle(shuffle_buffer_size)
     train_ds = train_ds.prefetch(buffer_size=fetch_buffer_size)
     train_ds = train_ds.batch(batch_size)
@@ -188,7 +188,7 @@ def test_sr_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
         for i in range(len(test_X)):
             yield test_X_r[i], test_X[i], test_Y[i]
 
-    test_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32))
+    test_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32,tf.float32))
     test_ds = test_ds.prefetch(buffer_size=fetch_buffer_size)
     test_ds = test_ds.batch(batch_size)
     return test_ds
