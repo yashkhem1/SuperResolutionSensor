@@ -152,8 +152,8 @@ def train_sr(opt):
                 if opt.use_perception_loss:
                     p_f = P(hr_f,training=False)
                     p_r = P(hr,training=False)
-                    loss_pr = 1e-3*MeanSquaredError()(p_r,p_f)
-                loss_g = loss_mse + loss_pr
+                    loss_pr = MeanSquaredError()(p_r,p_f)
+                loss_g = loss_mse + 1e-3*loss_pr
 
             grad = tape.gradient(loss_g,G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
