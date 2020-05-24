@@ -198,10 +198,10 @@ def train_sr(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, task_loss:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_loss))
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_gen_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_gen_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
 
 
 
