@@ -88,7 +88,7 @@ def train_clf(opt):
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            print("New learning rate", opt.lr_init * new_lr_decay)
+            print("New learning rate", opt.init_lr * new_lr_decay)
 
         y_true_test = np.array([],dtype='int32')
         y_pred_test = np.array([],dtype='int32')
@@ -104,10 +104,10 @@ def train_clf(opt):
         f1_test = f1_score(y_true_test,y_pred_test,average='weighted')
         print("Epoch: [{}/{}] test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, accuracy_test, f1_test))
         if accuracy_test > prev_best:
-            C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '.pt'))
+            C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '_' + str(opt.resample) + '_' + str(opt.weighted) + '.pt'))
             print('Saving Best generator with best accuracy:', accuracy_test, 'and F1 score:', f1_test)
             prev_best = accuracy_test
-        C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '.pt'))
+        C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '_' + str(opt.resample) + '_' +str(opt.weighted) + '.pt'))
 
 
 def train_sr(opt):
@@ -175,7 +175,7 @@ def train_sr(opt):
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            print("New learning rate", opt.lr_init * new_lr_decay)
+            print("New learning rate", opt.init_lr * new_lr_decay)
 
         x_true_test = np.array([])
         x_pred_test = np.array([])
@@ -198,10 +198,10 @@ def train_sr(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, task_loss:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_loss))
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_gen_'+str(opt.data_type)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_gen_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_gen_'+str(opt.data_type)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_gen_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
 
 
 
