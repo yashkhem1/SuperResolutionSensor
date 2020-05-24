@@ -168,7 +168,7 @@ def train_sr(opt):
 
         train_mse = mean_squared_error(x_true_train,x_pred_train)
         train_task_loss = accuracy_score(y_true_train,y_pred_train)
-        print("Epoch: [{}/{}]  mse:{:.6f}, task_loss:{:.6f} ".format(
+        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_loss))
 
         # Update Learning Rate
@@ -195,7 +195,7 @@ def train_sr(opt):
 
         test_mse = mean_squared_error(x_true_test, x_pred_test)
         test_task_loss = accuracy_score(y_true_test, y_pred_test)
-        print("Epoch: [{}/{}]  mse:{:.6f}, task_loss:{:.6f} ".format(
+        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_loss))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
