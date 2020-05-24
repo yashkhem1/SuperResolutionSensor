@@ -29,6 +29,7 @@ class Options:
         self.parser.add_argument('--sampling_ratio', type=int, default=1, help='Downsampling factor')
         self.parser.add_argument('--classifier_path', type=str, default='',
                                  help='Path to classification model for task based loss')
+        self.parser.add_argument('--init_epochs',type=int,default=0,help='Initial epochs without adversarial loss')
 
 
     def _print(self):

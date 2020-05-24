@@ -62,9 +62,10 @@ def ecg_disc_model(inp_shape):
     :return: Keras Model
     '''
     inp = Input(shape=inp_shape)
-    outfilters = [16,32,64]
+    outfilters = [16,32]
     filters = 16
-    n = Conv1D(filters, 3, 1, padding='same', kernel_initializer='he_normal')(inp)
+    n = GaussianNoise(0.05)(inp)
+    n = Conv1D(filters, 3, 1, padding='same', kernel_initializer='he_normal')(n)
     n = PReLU()(n)
     n = Conv1D(filters, 3, 2, padding='same', kernel_initializer='he_normal')(n)
     n = BatchNormalization()(n)
