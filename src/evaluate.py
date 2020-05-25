@@ -18,7 +18,7 @@ def evaluate_clf(opt):
 
 def evaluate_ecg_sr(opt):
     G = load_model(opt.model_path)
-    C = load_model(opt.classifier_model_path)
+    C = load_model(opt.classifier_path)
     test_X,test_Y = read_test_data(opt.data_type)
     x_true = test_X
     x_pred = G(x_true[:, ::opt.sampling_ratio, :],training=False)
