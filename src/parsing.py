@@ -30,6 +30,9 @@ class Options:
         self.parser.add_argument('--classifier_path', type=str, default='',
                                  help='Path to classification model for task based loss')
         self.parser.add_argument('--init_epochs',type=int,default=0,help='Initial epochs without adversarial loss')
+        self.parser.add_argument('--model_path', type=str, default='',
+                                 help='Path to  model for evaluation results')
+        self.parser.add_argument('--evaluate', type=int, default=0, help='Evaluate model on test dataset')
 
 
     def _print(self):

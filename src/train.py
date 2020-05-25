@@ -273,7 +273,7 @@ def train_sr_gan(opt):
 
             x_true_train = np.append(x_true_train,hr)
             x_pred_train = np.append(x_pred_train,hr_f)
-            y_true = np.argmax(C(hr,training=False),axis=1)
+            y_true = np.argmax(y,axis=1)
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
@@ -300,7 +300,7 @@ def train_sr_gan(opt):
             hr_f = G(lr,training=False)
             x_true_test = np.append(x_true_test, hr)
             x_pred_test = np.append(x_pred_test, hr_f)
-            y_true = np.argmax(C(hr, training=False), axis=1)
+            y_true = np.argmax(y, axis=1)
             y_pred = np.argmax(C(hr_f, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
             y_pred_test = np.append(y_pred_test, y_pred)
