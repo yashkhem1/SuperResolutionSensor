@@ -216,9 +216,10 @@ def train_sr_gan(opt):
     '''
     if opt.data_type == 'ecg':
         inp_shape = (192//opt.sampling_ratio,1)
+        inp_disc_shape = (192,1)
         nclasses =  5
         G = sr_model_func('ecg')(inp_shape,opt.sampling_ratio)
-        D = disc_model_func('ecg')(inp_shape)
+        D = disc_model_func('ecg')(inp_disc_shape)
         C = load_model(opt.classifier_path)
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
