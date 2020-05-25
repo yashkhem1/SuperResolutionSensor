@@ -258,10 +258,10 @@ def train_sr_gan(opt):
                 if epoch>=opt.init_epochs:
                     logits_f = D(hr_f, training=True)
                     logits_r = D(hr, training=True)
-                    loss_d1 = BinaryCrossentropy()(logits_f, tf.zeros_like(logits_f))
-                    loss_d2 = BinaryCrossentropy()(logits_r, 0.9 * tf.ones_like(logits_r))  # Label Smoothing
+                    loss_d1 = BinaryCrossentropy()(logits_f, tf.zeros_like(logits_f) + tf.random.uniform(logits_f.shape,0,1)*0.3)
+                    loss_d2 = BinaryCrossentropy()(logits_r, tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5)  # Label Smoothing
                     loss_d = loss_d1 + loss_d2
-                    loss_gen = BinaryCrossentropy()(logits_f, 0.9 * tf.ones_like(logits_f))  # Label Smoothing
+                    loss_gen = BinaryCrossentropy()(logits_f, tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5)  # Label Smoothing
                 if opt.use_perception_loss:
                     p_f = P(hr_f,training=False)
                     p_r = P(hr,training=False)

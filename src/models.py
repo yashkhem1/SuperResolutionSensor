@@ -64,7 +64,6 @@ def ecg_disc_model(inp_shape):
     inp = Input(shape=inp_shape)
     outfilters = [16,32]
     filters = 16
-    n = GaussianNoise(0.05)(inp)
     n = Conv1D(filters, 3, 1, padding='same', kernel_initializer='he_normal')(n)
     n = PReLU()(n)
     n = Conv1D(filters, 3, 2, padding='same', kernel_initializer='he_normal')(n)
@@ -80,8 +79,8 @@ def ecg_disc_model(inp_shape):
         n = PReLU()(n)
 
     n = Flatten()(n)
-    n = Dense(256)(n)
-    n = PReLU()(n)
+    # n = Dense(256)(n)
+    # n = PReLU()(n)
     n = Dense(1)(n)
     n = Activation('sigmoid')(n)
 
