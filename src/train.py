@@ -157,8 +157,8 @@ def train_sr(opt):
 
             grad = tape.gradient(loss_g,G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
-            x_true_train +=list(hr)
-            x_pred_train +=list(hr_f)
+            x_true_train +=list(hr.numpy())
+            x_pred_train +=list(hr_f.numpy())
             y_true = np.argmax(C(hr,training=False),axis=1)
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
@@ -186,8 +186,8 @@ def train_sr(opt):
         for step,(lr,hr,y) in enumerate(test_ds):
             step_time = time.time()
             hr_f = G(lr,training=False)
-            x_true_test += list(hr)
-            x_pred_test += list(hr_f)
+            x_true_test += list(hr.numpy())
+            x_pred_test += list(hr_f.numpy())
             y_true = np.argmax(C(hr, training=False), axis=1)
             y_pred = np.argmax(C(hr_f, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
@@ -276,8 +276,8 @@ def train_sr_gan(opt):
                 grad_d = tape.gradient(loss_d,D.trainable_weights)
                 d_optimizer.apply_gradients(zip(grad_d,D.trainable_weights))
 
-            x_true_train += list(hr)
-            x_pred_train += list(hr_f)
+            x_true_train += list(hr.numpy())
+            x_pred_train += list(hr_f.numpy())
             y_true = np.argmax(y,axis=1)
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
@@ -305,8 +305,8 @@ def train_sr_gan(opt):
         for step,(lr,hr,y) in enumerate(test_ds):
             step_time = time.time()
             hr_f = G(lr,training=False)
-            x_true_test += list(hr)
-            x_pred_test += list(hr_f)
+            x_true_test += list(hr.numpy())
+            x_pred_test += list(hr_f.numpy())
             y_true = np.argmax(y, axis=1)
             y_pred = np.argmax(C(hr_f, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
