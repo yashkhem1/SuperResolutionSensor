@@ -25,7 +25,7 @@ def evaluate_ecg_sr(opt):
     y_true = np.argmax(test_Y,axis=1)
     y_pred_sr = np.argmax(C(x_pred,training=False),axis=1)
     y_pred_hr= np.argmax(C(x_true,training=False),axis=1)
-    print('MSE: ', np.mean(x_true-x_pred)**2)
+    print('MSE: ', np.mean((x_true-x_pred)**2))
     print('Accuracy HR: ', accuracy_score(y_true,y_pred_hr))
     print('Accuracy SR: ', accuracy_score(y_true, y_pred_sr))
     print('F1_score HR: ', f1_score(y_true,y_pred_hr, average='weighted'))
