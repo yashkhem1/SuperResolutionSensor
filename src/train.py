@@ -254,7 +254,7 @@ def train_sr_gan(opt):
                 loss_d2=0
                 loss_d=0
                 loss_pr = 0
-                if epoch>opt.init_epochs:
+                if epoch>=opt.init_epochs:
                     logits_f = D(hr_f, training=True)
                     logits_r = D(hr, training=True)
                     loss_d1 = BinaryCrossentropy()(logits_f, tf.zeros_like(logits_f))
@@ -271,7 +271,7 @@ def train_sr_gan(opt):
 
             grad = tape.gradient(loss_g,G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
-            if epoch>opt.init_epochs:
+            if epoch>=opt.init_epochs:
                 grad_d = tape.gradient(loss_d,D.trainable_weights)
                 d_optimizer.apply_gradients(zip(grad_d,D.trainable_weights))
 
