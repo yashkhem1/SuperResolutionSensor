@@ -137,8 +137,8 @@ def train_sr(opt):
     n_steps_test = len(list(test_ds))
 
     for epoch in range(opt.epochs):
-        x_true_train = np.array([])
-        x_pred_train = np.array([])
+        x_true_train = []
+        x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
         for step , (lr,hr,y) in enumerate(train_ds):
@@ -157,8 +157,8 @@ def train_sr(opt):
 
             grad = tape.gradient(loss_g,G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
-            x_true_train = np.append(x_true_train,hr)
-            x_pred_train = np.append(x_pred_train,hr_f)
+            x_true_train +=list(hr)
+            x_pred_train +=list(hr_f)
             y_true = np.argmax(C(hr,training=False),axis=1)
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
@@ -166,10 +166,12 @@ def train_sr(opt):
             print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}".format(epoch,
                     opt.epochs,step, n_steps_train,time.time() - step_time, loss_mse,loss_pr))
 
-        train_mse = mean_squared_error(x_true_train,x_pred_train)
-        train_task_loss = accuracy_score(y_true_train,y_pred_train)
+        x_true_train = np.array(x_true_train)
+        x_pred_train = np.array(x_pred_train)
+        train_mse = np.mean((x_true_train-x_pred_train)**2)
+        train_task_score = accuracy_score(y_true_train,y_pred_train)
         print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
-            epoch, opt.epochs, train_mse, train_task_loss))
+            epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
@@ -177,15 +179,15 @@ def train_sr(opt):
             lr_v.assign(opt.init_lr * new_lr_decay)
             print("New learning rate", opt.init_lr * new_lr_decay)
 
-        x_true_test = np.array([])
-        x_pred_test = np.array([])
+        x_true_test = []
+        x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
         for step,(lr,hr,y) in enumerate(test_ds):
             step_time = time.time()
             hr_f = G(lr,training=False)
-            x_true_test = np.append(x_true_test, hr)
-            x_pred_test = np.append(x_pred_test, hr_f)
+            x_true_test += list(hr)
+            x_pred_test += list(hr_f)
             y_true = np.argmax(C(hr, training=False), axis=1)
             y_pred = np.argmax(C(hr_f, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
@@ -193,10 +195,12 @@ def train_sr(opt):
             print("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
                 epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
 
-        test_mse = mean_squared_error(x_true_test, x_pred_test)
-        test_task_loss = accuracy_score(y_true_test, y_pred_test)
+        x_true_test = np.array(x_true_test)
+        x_pred_test = np.array(x_pred_test)
+        test_mse = np.mean((x_true_test- x_pred_test)**2)
+        test_task_score= accuracy_score(y_true_test, y_pred_test)
         print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
-            epoch, opt.epochs, test_mse, test_task_loss))
+            epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
             print('Saving Best generator with best MSE:', test_mse)
@@ -234,8 +238,8 @@ def train_sr_gan(opt):
     n_steps_test = len(list(test_ds))
 
     for epoch in range(opt.epochs):
-        x_true_train = np.array([])
-        x_pred_train = np.array([])
+        x_true_train = []
+        x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
         for step , (lr,hr,y) in enumerate(train_ds):
@@ -271,8 +275,8 @@ def train_sr_gan(opt):
                 grad_d = tape.gradient(loss_d,D.trainable_weights)
                 d_optimizer.apply_gradients(zip(grad_d,D.trainable_weights))
 
-            x_true_train = np.append(x_true_train,hr)
-            x_pred_train = np.append(x_pred_train,hr_f)
+            x_true_train += list(hr)
+            x_pred_train += list(hr_f)
             y_true = np.argmax(y,axis=1)
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
@@ -280,10 +284,12 @@ def train_sr_gan(opt):
             print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}, adv:{:.6f}, d_fake_loss:{:.6f}, d_real_loss:{:.6f}".format(epoch,
                     opt.epochs,step, n_steps_train,time.time() - step_time, loss_mse,loss_pr,loss_gen,loss_d1,loss_d2))
 
-        train_mse = mean_squared_error(x_true_train,x_pred_train)
-        train_task_loss = accuracy_score(y_true_train,y_pred_train)
+        x_true_train = np.array(x_true_train)
+        x_pred_train = np.array(x_pred_train)
+        train_mse = np.mean((x_true_train-x_pred_train)**2)
+        train_task_score = accuracy_score(y_true_train,y_pred_train)
         print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
-            epoch, opt.epochs, train_mse, train_task_loss))
+            epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
@@ -291,15 +297,15 @@ def train_sr_gan(opt):
             lr_v.assign(opt.init_lr * new_lr_decay)
             print("New learning rate", opt.init_lr * new_lr_decay)
 
-        x_true_test = np.array([])
-        x_pred_test = np.array([])
+        x_true_test = []
+        x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
         for step,(lr,hr,y) in enumerate(test_ds):
             step_time = time.time()
             hr_f = G(lr,training=False)
-            x_true_test = np.append(x_true_test, hr)
-            x_pred_test = np.append(x_pred_test, hr_f)
+            x_true_test += list(hr)
+            x_pred_test += list(hr_f)
             y_true = np.argmax(y, axis=1)
             y_pred = np.argmax(C(hr_f, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
@@ -307,7 +313,9 @@ def train_sr_gan(opt):
             print("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
                 epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
 
-        test_mse = mean_squared_error(x_true_test, x_pred_test)
+        x_true_test = np.array(x_true_test)
+        x_pred_test = np.array(x_pred_test)
+        test_mse = np.mean((x_true_test - x_pred_test)**2)
         test_task_loss = accuracy_score(y_true_test, y_pred_test)
         print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_loss))
