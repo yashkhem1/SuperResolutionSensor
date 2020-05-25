@@ -64,7 +64,7 @@ def ecg_disc_model(inp_shape):
     inp = Input(shape=inp_shape)
     outfilters = [16,32]
     filters = 16
-    n = Conv1D(filters, 3, 1, padding='same', kernel_initializer='he_normal')(n)
+    n = Conv1D(filters, 3, 1, padding='same', kernel_initializer='he_normal')(inp_shape)
     n = PReLU()(n)
     n = Conv1D(filters, 3, 2, padding='same', kernel_initializer='he_normal')(n)
     n = BatchNormalization()(n)
