@@ -29,6 +29,17 @@ def plot_ecg(sampling_ratio, model_directory='ckpt',sample_number=None):
     # plt.show()
     plt.savefig('ecg_'+ str(sample_number)+'_'+str(sampling_ratio)+'.png')
 
+    color_list = ['r','b','g','y']
+    file_names = ['cnn','cnn_p','gen','gen_p']
+    legends = ['cnn w/o p_loss', 'cnn with p_loss', 'gan w/o p_loss', 'gan with p_loss']
+    sample_list = sample_list[1:]
+    for i,sample in enumerate(sample_list):
+        plt.figure(figsize=(15, 10))
+        plt.plot(sample_hr,'k')
+        plt.plot(sample,color_list[i])
+        plt.legend(['true',legends[i]])
+        plt.savefig('ecg_'+file_names[i]+'_'+str(sample_number)+'_'+str(sampling_ratio)+'.png')
+
 if __name__=="__main__":
     sampling_ratio = int(sys.argv[1])
     model_directory = sys.argv[2]
