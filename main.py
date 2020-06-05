@@ -13,7 +13,7 @@ if __name__ == "__main__":
         elif opt.data_type=='ecg':
             evaluate_ecg_sr(opt)
 
-    if opt.model_type == 'clf':
+    elif opt.model_type == 'clf':
         train_clf(opt)
 
     elif opt.model_type == 'sr':
