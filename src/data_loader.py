@@ -108,7 +108,14 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
         train_X = train_X[:, ::sampling_ratio, :]
         if sr_model:
             G = load_model(sr_model)
-            train_X = G(train_X,training=False).numpy()
+            i = 0
+            train_X_sr = np.zeros(train_X.shape)
+            while (i <= len(train_X)):
+                print(i)
+                train_X_sr[i:min(i+5000,len(train_X))] = G(train_X[i:min(i+5000,len(train_X))],training=False).numpy()
+                i+=5000
+            train_X = train_X_sr
+            print(len(train_X))
 
     #defining the generator to generate dataset
     def generator():
