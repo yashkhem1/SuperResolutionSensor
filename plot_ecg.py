@@ -11,8 +11,8 @@ def plot_ecg(sampling_ratio, model_directory='ckpt',sample_number=None):
         sample_number = np.random.randint(test_X.shape[0])
         sample = test_X[sample_number]
 
-    model_list = ['best_cnn_ecg_'+str(sampling_ratio)+'_0','best_cnn_ecg_'+str(sampling_ratio)+'_1',
-                  'best_gen_ecg_'+str(sampling_ratio)+'_0','best_gen_ecg_'+str(sampling_ratio)+'_1' ]
+    model_list = ['best_cnn_ecg_'+str(sampling_ratio)+'_0.pt','best_cnn_ecg_'+str(sampling_ratio)+'_1.pt',
+                  'best_gen_ecg_'+str(sampling_ratio)+'_0.pt','best_gen_ecg_'+str(sampling_ratio)+'_1.pt' ]
 
     sample_hr = sample.copy().reshape(-1)
     sample_list = [sample_hr]
@@ -21,7 +21,7 @@ def plot_ecg(sampling_ratio, model_directory='ckpt',sample_number=None):
         sample_sr = G(sample[::sampling_ratio, :].reshape(1,-1,1), training=False).numpy()
         sample_list.append(sample_sr.reshape(-1))
 
-    color_list = ['kd','r','b','g','y']
+    color_list = ['k','r','b','g','y']
     plt.figure(figsize=(15, 10))
     for i,sample in enumerate(sample_list):
         plt.plot(sample, color_list[i])
