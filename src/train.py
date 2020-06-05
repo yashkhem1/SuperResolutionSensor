@@ -30,17 +30,22 @@ def train_clf(opt):
     '''
     if opt.data_type == 'ecg':
         inp_shape = (192//opt.sampling_ratio,1)
+        if opt.use_sr_clf:
+            inp_shape = (192,1)
         nclasses =  5
         C = clf_model_func('ecg')(inp_shape,nclasses)
 
     print(C.summary())
     lr_v = tf.Variable(opt.init_lr)
     c_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
+    sr_model = None
+    if opt.use_sr_clf:
+        sr_model = opt.model_path
 
     train_ds = train_cf_dataset(opt.data_type,opt.sampling_ratio,opt.train_batch_size,opt.shuffle_buffer_size,opt.fetch_buffer_size,
-                                opt.resample)
+                                opt.resample,sr_model)
 
-    test_ds = test_cf_dataset(opt.data_type,opt.sampling_ratio,opt.test_batch_size,opt.fetch_buffer_size)
+    test_ds = test_cf_dataset(opt.data_type,opt.sampling_ratio,opt.test_batch_size,opt.fetch_buffer_size,sr_model)
     prev_best = -1*np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -103,11 +108,22 @@ def train_clf(opt):
         accuracy_test = accuracy_score(y_true_test,y_pred_test)
         f1_test = f1_score(y_true_test,y_pred_test,average='weighted')
         print("Epoch: [{}/{}] test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, accuracy_test, f1_test))
+        if opt.use_sr_clf:
+            model_defs = opt.model_path.split('/')[-1].split('_')
+            sr_string = model_defs[1]
+            use_perception = model_defs[4]
+        else:
+            sr_string = '0'
+            use_perception='0'
         if accuracy_test > prev_best:
-            C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '_' + str(opt.resample) + '_' + str(opt.weighted) + '.pt'))
+            C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
+                                + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
+                                '_weighted_' + str(opt.weighted) + '.pt'))
             print('Saving Best generator with best accuracy:', accuracy_test, 'and F1 score:', f1_test)
             prev_best = accuracy_test
-        C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '_' + str(opt.resample) + '_' +str(opt.weighted) + '.pt'))
+        C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
+                                + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
+                                '_weighted_' + str(opt.weighted) + '.pt'))
 
 
 def train_sr(opt):

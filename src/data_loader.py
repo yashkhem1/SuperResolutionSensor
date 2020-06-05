@@ -9,6 +9,7 @@ from sklearn.utils import resample
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
 from sklearn.utils import class_weight
+from tensorflow.keras.models import load_model
 
 import tensorflow as tf
 
@@ -90,7 +91,7 @@ def read_test_data(data_type):
 
         return test_X,test_Y
 
-def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2,resample=False):
+def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2,resample=False, sr_model= None):
     '''
     Returns the train dataset for classification model
     :param data_type: str
@@ -105,6 +106,9 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
     #downsample the high resolution data
     if data_type == 'ecg':
         train_X = train_X[:, ::sampling_ratio, :]
+        if sr_model:
+            G = load_model(sr_model)
+            train_X = G(train_X,training=False).numpy()
 
     #defining the generator to generate dataset
     def generator():
@@ -117,7 +121,7 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
     train_ds = train_ds.batch(batch_size)
     return train_ds
 
-def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
+def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_model = None):
     '''
     Returns the test dataloader for classification model
     :param data_type: str
@@ -130,6 +134,9 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
     #downsample the high resolution data
     if data_type == 'ecg':
         test_X = test_X[:, ::sampling_ratio, :]
+        if sr_model:
+            G = load_model(sr_model)
+            test_X = G(test_X,training=False).numpy()
 
     # defining the generator to generate dataset
     def generator():

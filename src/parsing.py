@@ -33,6 +33,7 @@ class Options:
         self.parser.add_argument('--model_path', type=str, default='',
                                  help='Path to  model for evaluation results')
         self.parser.add_argument('--evaluate', type=int, default=0, help='Evaluate model on test dataset')
+        self.parser.add_argument('--use_sr_clf', type=int, default=0, help='Use super-resolved data for classification')
 
 
     def _print(self):

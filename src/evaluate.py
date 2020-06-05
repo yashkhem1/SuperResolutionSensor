@@ -5,8 +5,13 @@ from tensorflow.keras.models import load_model
 from sklearn.metrics import mean_squared_error, accuracy_score, f1_score, confusion_matrix
 
 def evaluate_clf(opt):
-    C = load_model(opt.model_path)
+    C = load_model(opt.classifier_path)
     test_X,test_Y = read_test_data(opt.data_type)
+    if opt.data_type=='ecg':
+        test_X = test_X[:,::opt.sampling_ratio,:]
+    if opt.use_sr_clf:
+        G = load_model(opt.model_path)
+        test_X = G(test_X,training=False).numpy()
     y_true = np.argmax(test_Y,axis=1)
     y_pred = np.argmax(C(test_X,training=False),axis=1)
     accuracy = accuracy_score(y_true,y_pred)

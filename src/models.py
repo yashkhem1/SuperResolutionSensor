@@ -96,17 +96,23 @@ def ecg_clf_model(inp_shape,nclasses):
     inp = Input(shape=inp_shape)
     outfilters = [16, 32, 64]
     filters = 16
+    input_length = inp_shape[0]
     n = Conv1D(filters, 3, 1, padding='same', kernel_initializer='he_normal')(inp)
     n = PReLU()(n)
     n = Conv1D(filters, 3, 2, padding='same', kernel_initializer='he_normal')(n)
     n = BatchNormalization()(n)
     n = PReLU()(n)
+    input_length/=2
 
     for i in range(len(outfilters)):
         n = Conv1D(outfilters[i], 3, 1, padding='same', kernel_initializer='he_normal')(n)
         n = BatchNormalization()(n)
         n = PReLU()(n)
-        n = Conv1D(outfilters[i], 3, 2, padding='same', kernel_initializer='he_normal')(n)
+        if input_length%2==0:
+            n = Conv1D(outfilters[i], 3, 2, padding='same', kernel_initializer='he_normal')(n)
+            input_length/=2
+        else:
+            n= Conv1D(outfilters[i], 3, 1, padding='same', kernel_initializer='he_normal')(n)
         n = BatchNormalization()(n)
         n = PReLU()(n)
 
