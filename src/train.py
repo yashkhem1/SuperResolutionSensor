@@ -302,15 +302,15 @@ def train_sr_gan(opt):
                     logits_f = D(hr_f, training=True)
                     logits_r = D(hr, training=True)
                     if opt.gan_type == 'normal':
-                        f_loss = BinaryCrossentropy(from_logits=True)(tf.zeros_like(logits_f),logits_f)
-                        r_loss = BinaryCrossentropy(from_logits=True)(tf.ones_like(logits_r),logits_r)
+                        f_loss = MeanSquaredError()(tf.zeros_like(logits_f),logits_f)
+                        r_loss = MeanSquaredError()(tf.ones_like(logits_r),logits_r)
                         loss_d = f_loss + r_loss
-                        loss_gen = BinaryCrossentropy(from_logits=True)(tf.ones_like(logits_r),logits_f)
+                        loss_gen = MeanSquaredError()(tf.ones_like(logits_f),logits_f)
                     elif opt.gan_type == 'normal_ls':
-                        f_loss = BinaryCrossentropy(from_logits=True)(tf.zeros_like(logits_f) + tf.random.uniform(logits_f.shape,0,1)*0.3,logits_f) # Label Smoothing
-                        r_loss = BinaryCrossentropy(from_logits=True)(tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5,logits_r)  # Label Smoothing
+                        f_loss = MeanSquaredError()(tf.zeros_like(logits_f) + tf.random.uniform(logits_f.shape,0,1)*0.3,logits_f) # Label Smoothing
+                        r_loss = MeanSquaredError()(tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5,logits_r)  # Label Smoothing
                         loss_d = f_loss + r_loss
-                        loss_gen = BinaryCrossentropy(from_logits=True)(tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5,logits_f)  # Label Smoothing
+                        loss_gen = MeanSquaredError()(tf.ones_like(logits_f) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5,logits_f)  # Label Smoothing
                     elif opt.gan_type == 'wgan':
                         r_loss = - tf.reduce_mean(logits_r)
                         f_loss = tf.reduce_mean(logits_f)
