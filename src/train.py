@@ -315,7 +315,7 @@ def train_sr_gan(opt):
                         r_loss = - tf.reduce_mean(logits_r)
                         f_loss = tf.reduce_mean(logits_f)
                         grad_p = gradient_penalty(D,logits_r,logits_f)
-                        loss_d = f_loss + r_loss
+                        loss_d = f_loss + r_loss + opt.gp_lambda*grap_p
                         loss_gen = -tf.reduce_mean(logits_f)
 
                 if opt.use_perception_loss:

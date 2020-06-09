@@ -36,6 +36,7 @@ class Options:
         self.parser.add_argument('--use_sr_clf', type=int, default=0, help='Use super-resolved data for classification')
         self.parser.add_argument('--gan_type', type=str,default='normal',help='Type of GAN Loss', choices=['normal','wgan','wgan_gp'])
         self.parser.add_argument('--clip_value',type=float,default=0.01,help='Clip value for WGAN')
+        self.parser.add_argument('--gp_lambda',type=float,default=10,help='Multiplier for Gradient Penalty')
 
 
     def _print(self):
