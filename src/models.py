@@ -67,22 +67,22 @@ def ecg_disc_model(inp_shape):
     n = Conv1D(filters, 3, 1, padding='same', kernel_initializer='he_normal')(inp)
     n = PReLU()(n)
     n = Conv1D(filters, 3, 2, padding='same', kernel_initializer='he_normal')(n)
-    n = BatchNormalization()(n)
+    # n = BatchNormalization()(n)
     n = PReLU()(n)
 
     for i in range(len(outfilters)):
         n = Conv1D(outfilters[i], 3, 1, padding='same', kernel_initializer='he_normal')(n)
-        n = BatchNormalization()(n)
+        # n = BatchNormalization()(n)
         n = PReLU()(n)
         n = Conv1D(outfilters[i], 3, 2, padding='same', kernel_initializer='he_normal')(n)
-        n = BatchNormalization()(n)
+        # n = BatchNormalization()(n)
         n = PReLU()(n)
 
     n = Flatten()(n)
     # n = Dense(256)(n)
     # n = PReLU()(n)
     n = Dense(1)(n)
-    n = Activation('sigmoid')(n)
+    # n = Activation('sigmoid')(n)
 
     disc = Model(inputs=inp, outputs=n, name='Discriminator')
     return disc

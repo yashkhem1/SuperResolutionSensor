@@ -22,6 +22,32 @@ from src.models import *
 from src.data_loader import *
 
 
+def gradient_penalty(f, real, fake):
+    '''
+    Gradient penalty for WGAN-GP
+    :param f: Keras Model
+    :param real: Tensorflow Tensor
+    :param fake: Tensorflow Tensor
+    :return: Tensorflow Scalar Tensor
+    '''
+    def _interpolate(a, b):
+        shape = [tf.shape(a)[0]] + [1] * (a.shape.ndims - 1)
+        alpha = tf.random.uniform(shape=shape, minval=0., maxval=1.)
+        inter = a + alpha * (b - a)
+        inter.set_shape(a.shape)
+        return inter
+
+    x = _interpolate(real, fake)
+    with tf.GradientTape() as t:
+        t.watch(x)
+        pred = f(x)
+    grad = t.gradient(pred, x)
+    norm = tf.norm(tf.reshape(grad, [tf.shape(grad)[0], -1]), axis=1)
+    gp = tf.reduce_mean((norm - 1.)**2)
+    return gp
+
+
+
 def train_clf(opt):
     '''
     Training loop for classification
@@ -263,21 +289,35 @@ def train_sr_gan(opt):
             if lr.shape[0]<opt.train_batch_size:
                 break
             step_time = time.time()
-            with tf.GradientTape(persistent=True) as tape:
+            with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
                 hr_f = G(lr,training=True)
                 loss_mse = MeanSquaredError()(hr,hr_f)
                 loss_gen = 0
-                loss_d1= 0
-                loss_d2=0
+                f_loss= 0
+                r_loss= 0
                 loss_d=0
                 loss_pr = 0
+                grad_p = 0
                 if epoch>=opt.init_epochs:
                     logits_f = D(hr_f, training=True)
                     logits_r = D(hr, training=True)
-                    loss_d1 = BinaryCrossentropy()(logits_f, tf.zeros_like(logits_f) + tf.random.uniform(logits_f.shape,0,1)*0.3)
-                    loss_d2 = BinaryCrossentropy()(logits_r, tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5)  # Label Smoothing
-                    loss_d = loss_d1 + loss_d2
-                    loss_gen = BinaryCrossentropy()(logits_f, tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5)  # Label Smoothing
+                    if opt.gan_type == 'normal':
+                        f_loss = BinaryCrossentropy(from_logits=True)(logits_f, tf.zeros_like(logits_f) + tf.random.uniform(logits_f.shape,0,1)*0.3)
+                        r_loss = BinaryCrossentropy(from_logits=True)(logits_r, tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5)  # Label Smoothing
+                        loss_d = f_loss + r_loss
+                        loss_gen = BinaryCrossentropy(from_logits=True)(logits_f, tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5)  # Label Smoothing
+                    elif opt.gan_type == 'wgan':
+                        r_loss = - tf.reduce_mean(logits_r)
+                        f_loss = tf.reduce_mean(logits_f)
+                        loss_d = f_loss+r_loss
+                        loss_gen = -tf.reduce_mean(logits_f)
+                    elif opt.gan_type =='wgan_gp':
+                        r_loss = - tf.reduce_mean(logits_r)
+                        f_loss = tf.reduce_mean(logits_f)
+                        grad_p = gradient_penalty(D,logits_r,logits_f)
+                        loss_d = f_loss + r_loss
+                        loss_gen = -tf.reduce_mean(logits_f)
+
                 if opt.use_perception_loss:
                     p_f = P(hr_f,training=False)
                     p_r = P(hr,training=False)
@@ -286,11 +326,16 @@ def train_sr_gan(opt):
                 loss_g = loss_mse + 1e-3*loss_pr + 1e-3*loss_gen
 
 
-            grad = tape.gradient(loss_g,G.trainable_weights)
+            grad = gen_tape.gradient(loss_g,G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
             if epoch>=opt.init_epochs:
-                grad_d = tape.gradient(loss_d,D.trainable_weights)
+                grad_d = disc_tape.gradient(loss_d,D.trainable_weights)
                 d_optimizer.apply_gradients(zip(grad_d,D.trainable_weights))
+                if opt.gan_type =='WGAN':
+                    for l in D.layers:
+                        weights = l.get_weights()
+                        weights = [np.clip(w, -opt.clip_value, opt.clip_value) for w in weights]
+                        l.set_weights(weights)
 
             x_true_train += list(hr.numpy())
             x_pred_train += list(hr_f.numpy())
@@ -298,8 +343,9 @@ def train_sr_gan(opt):
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}, adv:{:.6f}, d_fake_loss:{:.6f}, d_real_loss:{:.6f}".format(epoch,
-                    opt.epochs,step, n_steps_train,time.time() - step_time, loss_mse,loss_pr,loss_gen,loss_d1,loss_d2))
+            print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}, adv:{:.6f}, d_fake_loss:{:.6f},"
+                  " d_real_loss:{:.6f},  gradient_penalty:{:.6f}".format(epoch,
+                    opt.epochs,step, n_steps_train,time.time() - step_time, loss_mse,loss_pr,loss_gen,f_loss,r_loss,grad_p))
 
         x_true_train = np.array(x_true_train)
         x_pred_train = np.array(x_pred_train)
