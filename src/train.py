@@ -389,8 +389,8 @@ def train_sr_gan(opt):
                                     opt.use_perception_loss) + '.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_gen_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
-        D.save(os.path.join(opt.save_dir, 'last_disc_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
+        G.save(os.path.join(opt.save_dir,'last_gen_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+        D.save(os.path.join(opt.save_dir, 'last_disc_'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
             opt.use_perception_loss) + '.pt'))
 
 
