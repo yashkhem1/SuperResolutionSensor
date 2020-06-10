@@ -111,7 +111,7 @@ def train_clf(opt):
         # print(y_true_train)
         # print(y_pred_train)
         accuracy_train = accuracy_score(y_true_train,y_pred_train)
-        f1_train = f1_score(y_true_train,y_pred_train,average='weighted')
+        f1_train = f1_score(y_true_train,y_pred_train,average='macro')
         print("Epoch: [{}/{}]  accuracy:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, accuracy_train, f1_train))
 
@@ -132,7 +132,7 @@ def train_clf(opt):
                 epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
 
         accuracy_test = accuracy_score(y_true_test,y_pred_test)
-        f1_test = f1_score(y_true_test,y_pred_test,average='weighted')
+        f1_test = f1_score(y_true_test,y_pred_test,average='macro')
         print("Epoch: [{}/{}] test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, accuracy_test, f1_test))
         if opt.use_sr_clf:
             model_defs = opt.model_path.split('/')[-1].split('_')
