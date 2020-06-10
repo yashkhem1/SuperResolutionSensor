@@ -388,7 +388,7 @@ def train_sr_gan(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_loss))
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_gen_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_gen_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
             D.save(os.path.join(opt.save_dir,
                                 'best_disc_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
                                     opt.use_perception_loss) + '.pt'))
