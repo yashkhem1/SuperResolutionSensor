@@ -336,7 +336,7 @@ def train_sr_gan(opt):
             if epoch>=opt.init_epochs:
                 grad_d = disc_tape.gradient(loss_d,D.trainable_weights)
                 d_optimizer.apply_gradients(zip(grad_d,D.trainable_weights))
-                if opt.gan_type =='WGAN':
+                if opt.gan_type =='wgan':
                     for l in D.layers:
                         weights = l.get_weights()
                         weights = [np.clip(w, -opt.clip_value, opt.clip_value) for w in weights]
