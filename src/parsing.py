@@ -34,9 +34,18 @@ class Options:
                                  help='Path to  model for evaluation results')
         self.parser.add_argument('--evaluate', type=int, default=0, help='Evaluate model on test dataset')
         self.parser.add_argument('--use_sr_clf', type=int, default=0, help='Use super-resolved data for classification')
+        self.parser.add_argument('-seed', type=int, default=1, help='Random Seed')
+        self.parser.add_argument('--prob', type = float, default=0.1, help='Probability of missing data')
+
+        # ===============================================================
+        #                     GAN options
+        # ===============================================================
         self.parser.add_argument('--gan_type', type=str,default='normal',help='Type of GAN Loss', choices=['normal','wgan','wgan_gp','normal_ls'])
         self.parser.add_argument('--clip_value',type=float,default=0.01,help='Clip value for WGAN')
         self.parser.add_argument('--gp_lambda',type=float,default=10,help='Multiplier for Gradient Penalty')
+
+
+
 
 
     def _print(self):

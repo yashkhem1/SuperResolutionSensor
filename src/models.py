@@ -51,9 +51,48 @@ def ecg_sr_model(inp_shape,sampling_ratio):
         n = PReLU()(n)
 
     n = Conv1D(1, 1, 1, padding='same', kernel_initializer='he_normal')(n)
-    gen = Model(inputs=inp, outputs=n, name='Generator')
+    gen = Model(inputs=inp, outputs=n, name='SR_generator')
     return gen
 
+def ecg_imp_model(inp_shape):
+    '''
+    Imputation model for ECG Dataset
+    :param inp_shape: Tuple(int)
+    :return: Keras Model
+    '''
+    inp = Input(shape=inp_shape)
+    outfilters = [32, 64, 128]
+    filters = 16
+    n = Conv1D(filters, 3, 1, padding='same', kernel_initializer='he_normal')(inp)
+    n = BatchNormalization()(n)
+    n = PReLU()(n)
+    down_array = [n]
+
+    for i in range(len(outfilters)):
+        n = Conv1D(outfilters[i], 3, 2, padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+        n = Conv1D(outfilters[i], 3, 1, padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+        down_array.append(n)
+
+    outfilters.reverse()
+    outfilters.append(filter)
+
+    for i in range(1,len(outfilters)):
+        n = UpSampling1D(size=2)(n)
+        n = Conv1D(outfilters[i], 3, 1, padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+        n = concatenate([n,down_array[len(outfilters)-i-1]],axis=-1)
+        n = Conv1D(outfilters[i], 3, 1, padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+
+    n = Conv1D(1,1,1,padding='same', kernel_initializer='he_normal')(n)
+    gen = Model(inputs=inp, outputs=n, name='Imp_Generator')
+    return gen
 
 def ecg_disc_model(inp_shape):
     '''
@@ -133,6 +172,15 @@ def sr_model_func(data_type):
     '''
     if data_type=='ecg':
         return ecg_sr_model
+
+def imp_model_func(data_type):
+    '''
+    Returns imputation model architecture for the given data type
+    :param data_type: str
+    :return: Function that returns Keras Model
+    '''
+    if data_type=='ecg':
+        return ecg_imp_model
 
 def disc_model_func(data_type):
     '''

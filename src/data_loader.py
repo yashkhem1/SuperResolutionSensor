@@ -207,6 +207,81 @@ def test_sr_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
     test_ds = test_ds.batch(batch_size)
     return test_ds
 
+def train_imp_dataset(data_type,batch_size, prob, seed,shuffle_buffer_size=1000,fetch_buffer_size=2, resample=False):
+    '''
+    Returns train dataset for missing data imputation model for the given sampling ratio
+    :param data_type: str
+    :param sampling_ratio: int
+    :param batch_size: int
+    :param prob: float
+    :param seed: int
+    :param shuffle_buffer_size: int
+    :param fetch_buffer_size: int
+    :param resample: bool
+    :return: Tensorflow Dataset
+    '''
+    train_X, train_Y = read_train_data(data_type,resample)
+    #downsampling the high resolution dataset
+    if data_type == 'ecg':
+        np.random.seed(seed)
+        indices = np.arange(192)
+        n_missing = int(prob*192)
+        train_X_m = np.zeros(train_X.shape)
+        train_mask = np.ones(train_X.shape)
+        for i,data in enumerate(train_X):
+            missing_indices = np.random.choice(indices,n_missing)
+            train_X_m[i] = data
+            train_X_m[i][missing_indices]=0
+            train_mask[i][missing_indices]=0
+
+    print("Loaded Training Data")
+
+    # defining the generator to generate dataset
+    def generator():
+        for i in range(len(train_X)):
+            yield train_X_m[i], train_mask[i],train_X[i], train_Y[i]
+
+    train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32,tf.float32,tf.float32))
+    train_ds = train_ds.shuffle(shuffle_buffer_size)
+    train_ds = train_ds.prefetch(buffer_size=fetch_buffer_size)
+    train_ds = train_ds.batch(batch_size)
+    return train_ds
+
+def test_imp_dataset(data_type,batch_size,prob,seed,fetch_buffer_size=2):
+    '''
+    Returns test dataset for super resolution model for the given sampling ratio
+    :param data_type: str
+    :param sampling_ratio: int
+    :param batch_size: int
+    :param fetch_buffer_size: int
+    :return: Tensorflow Dataset
+    '''
+    test_X, test_Y = read_test_data(data_type)
+    # downsampling the high resolution dataset
+    if data_type=='ecg':
+        np.random.seed(seed)
+        indices = np.arange(192)
+        n_missing = int(prob * 192)
+        test_X_m = np.zeros(test_X.shape)
+        test_mask = np.ones(test_X.shape)
+        for i, data in enumerate(test_X):
+            missing_indices = np.random.choice(indices, n_missing)
+            test_X_m[i] = data
+            test_X_m[i][missing_indices] = 0
+            test_mask[i][missing_indices] = 0
+
+    print("Loaded Testing Data")
+
+    # defining the generator to generate dataset
+    def generator():
+        for i in range(len(test_X)):
+            yield test_X_m[i], test_mask[i], test_X[i], test_Y[i]
+
+    test_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32, tf.float32,tf.float32))
+    test_ds = test_ds.prefetch(buffer_size=fetch_buffer_size)
+    test_ds = test_ds.batch(batch_size)
+    return test_ds
+
 
 
 
