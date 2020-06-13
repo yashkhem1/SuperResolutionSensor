@@ -502,7 +502,7 @@ def train_imp(opt):
             x_pred_orig = x_pred.numpy()
             x_pred_orig[mask.numpy()==1] = x[mask.numpy()==1]
             x_true_test += list(x.numpy())
-            x_pred_test += list(x_pred)
+            x_pred_test += list(x_pred_orig)
             y_true = np.argmax(C(x, training=False), axis=1)
             y_pred = np.argmax(C(x_pred_orig, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
