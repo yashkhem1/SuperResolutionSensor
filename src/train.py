@@ -458,10 +458,10 @@ def train_imp(opt):
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
                 loss_mse = MeanSquaredError()(mask*x,mask*x_pred)
+                x_pred_orig = x_pred.numpy()
+                x_pred_orig[mask.numpy() == 1] = x[mask.numpy() == 1]
                 loss_pr = 0
                 if opt.use_perception_loss:
-                    x_pred_orig = x_pred.numpy()
-                    x_pred_orig[mask.numpy() == 1] = x[mask.numpy() == 1]
                     p_f = P(x_pred_orig,training=False)
                     p_r = P(x,training=False)
                     loss_pr = MeanSquaredError()(p_r,p_f)

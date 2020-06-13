@@ -78,7 +78,7 @@ def ecg_imp_model(inp_shape):
         down_array.append(n)
 
     outfilters.reverse()
-    outfilters.append(filter)
+    outfilters.append(filters)
 
     for i in range(1,len(outfilters)):
         n = UpSampling1D(size=2)(n)
