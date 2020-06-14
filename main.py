@@ -1,5 +1,5 @@
 from src.parsing import Options
-from src.train import train_clf, train_sr, train_sr_gan, train_imp
+from src.train import train_clf, train_sr, train_sr_gan, train_imp, train_imp_gan
 from src.evaluate import evaluate_clf, evaluate_ecg_sr
 
 if __name__ == "__main__":
@@ -25,6 +25,10 @@ if __name__ == "__main__":
 
     elif opt.model_type == 'imp':
         train_imp(opt)
+
+    elif opt.model_type == 'imp_gan':
+        train_imp_gan(opt)
+
 
 
 
