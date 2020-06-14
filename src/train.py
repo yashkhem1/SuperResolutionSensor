@@ -457,7 +457,7 @@ def train_imp(opt):
             with tf.GradientTape(persistent=True) as tape:
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
-                loss_mse = MeanSquaredError()(mask*x,mask*x_pred)
+                loss_mse = MeanSquaredError()((1-mask)*x,(1-mask)*x_pred)
                 x_pred_orig = x*mask+x_pred*(1-mask)
                 loss_pr = 0
                 if opt.use_perception_loss:
@@ -568,7 +568,7 @@ def train_imp_gan(opt):
             with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
-                loss_mse = MeanSquaredError()(mask*x,mask*x_pred)
+                loss_mse = MeanSquaredError()((1-mask)*x,(1-mask)*x_pred)
                 x_pred_orig = x*mask +x_pred*(1-mask)
                 loss_gen = 0
                 f_loss = 0
