@@ -400,9 +400,9 @@ def train_sr_gan(opt):
         x_true_test = np.array(x_true_test)
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test - x_pred_test)**2)
-        test_task_loss = accuracy_score(y_true_test, y_pred_test)
+        test_task_score = accuracy_score(y_true_test, y_pred_test)
         print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
-            epoch, opt.epochs, test_mse, test_task_loss))
+            epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_gen_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
             D.save(os.path.join(opt.save_dir,
@@ -458,8 +458,7 @@ def train_imp(opt):
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
                 loss_mse = MeanSquaredError()(mask*x,mask*x_pred)
-                x_pred_orig = x_pred.numpy()
-                x_pred_orig[mask.numpy() == 1] = x[mask.numpy() == 1]
+                x_pred_orig = x*mask+x_pred*(1-mask)
                 loss_pr = 0
                 if opt.use_perception_loss:
                     p_f = P(x_pred_orig,training=False)
@@ -470,7 +469,7 @@ def train_imp(opt):
             grad = tape.gradient(loss_g,G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
             x_true_train +=list(x.numpy())
-            x_pred_train +=list(x_pred_orig)
+            x_pred_train +=list(x_pred_orig.numpy())
             y_true = np.argmax(C(x,training=False),axis=1)
             y_pred = np.argmax(C(x_pred_orig,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
@@ -499,10 +498,9 @@ def train_imp(opt):
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
             x_pred = G(x_m_mask,training=False)
-            x_pred_orig = x_pred.numpy()
-            x_pred_orig[mask.numpy()==1] = x[mask.numpy()==1]
+            x_pred_orig = x*mask+x_pred*(1-mask)
             x_true_test += list(x.numpy())
-            x_pred_test += list(x_pred_orig)
+            x_pred_test += list(x_pred_orig.numpy())
             y_true = np.argmax(C(x, training=False), axis=1)
             y_pred = np.argmax(C(x_pred_orig, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
@@ -521,6 +519,173 @@ def train_imp(opt):
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_cnn_imp_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+
+
+# ===============================================================
+#                Missing Data Imputation with GAN
+# ===============================================================
+
+def train_imp_gan(opt):
+    '''
+    Training loop for missing data imputation with adversarial loss
+    :param opt: Argument Parser
+    :return:
+    '''
+    if opt.data_type == 'ecg':
+        inp_shape = (192,2)
+        inp_disc_shape = (192,1)
+        nclasses =  5
+        G = imp_model_func('ecg')(inp_shape)
+        D = disc_model_func('ecg')(inp_disc_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
+
+    print(G.summary())
+    print(D.summary())
+
+    lr_v = tf.Variable(opt.init_lr)
+    g_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
+    d_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
+
+    train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.shuffle_buffer_size,
+                                opt.fetch_buffer_size, opt.resample)
+    test_ds = test_imp_dataset(opt.data_type, opt.test_batch_size, opt.prob, opt.seed, opt.fetch_buffer_size)
+    prev_best = np.inf
+    n_steps_train = len(list(train_ds))
+    n_steps_test = len(list(test_ds))
+
+    for epoch in range(opt.epochs):
+        x_true_train = []
+        x_pred_train = []
+        y_true_train = np.array([],dtype='int32')
+        y_pred_train = np.array([],dtype='int32')
+        for step , (x_m,mask,x,y) in enumerate(train_ds):
+            if x.shape[0]<opt.train_batch_size:
+                break
+            step_time = time.time()
+            with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+                x_m_mask = tf.concat([x_m,mask],axis=-1)
+                x_pred = G(x_m_mask,training=True)
+                loss_mse = MeanSquaredError()(mask*x,mask*x_pred)
+                x_pred_orig = x*mask +x_pred*(1-mask)
+                loss_gen = 0
+                f_loss = 0
+                r_loss = 0
+                loss_d = 0
+                loss_pr = 0
+                grad_p = 0
+                if epoch >= opt.init_epochs:
+                    logits_f = D(x_pred_orig, training=True)
+                    logits_r = D(x, training=True)
+                    if opt.gan_type == 'normal':
+                        f_loss = MeanSquaredError()(tf.zeros_like(logits_f), logits_f)
+                        r_loss = MeanSquaredError()(tf.ones_like(logits_r), logits_r)
+                        loss_d = f_loss + r_loss
+                        loss_gen = MeanSquaredError()(tf.ones_like(logits_f), logits_f)
+                    elif opt.gan_type == 'normal_ls':
+                        f_loss = MeanSquaredError()(
+                            tf.zeros_like(logits_f) + tf.random.uniform(logits_f.shape, 0, 1) * 0.3,
+                            logits_f)  # Label Smoothing
+                        r_loss = MeanSquaredError()(
+                            tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape, 0, 1) * 0.5,
+                            logits_r)  # Label Smoothing
+                        loss_d = f_loss + r_loss
+                        loss_gen = MeanSquaredError()(
+                            tf.ones_like(logits_f) - 0.3 + tf.random.uniform(logits_f.shape, 0, 1) * 0.5,
+                            logits_f)  # Label Smoothing
+                    elif opt.gan_type == 'wgan':
+                        r_loss = - tf.reduce_mean(logits_r)
+                        f_loss = tf.reduce_mean(logits_f)
+                        loss_d = f_loss + r_loss
+                        loss_gen = -tf.reduce_mean(logits_f)
+                    elif opt.gan_type == 'wgan_gp':
+                        r_loss = - tf.reduce_mean(logits_r)
+                        f_loss = tf.reduce_mean(logits_f)
+                        grad_p = gradient_penalty(D, x, x_pred_orig)
+                        loss_d = f_loss + r_loss + opt.gp_lambda * grad_p
+                        loss_gen = -tf.reduce_mean(logits_f)
+
+                if opt.use_perception_loss:
+                    p_f = P(x_pred_orig,training=False)
+                    p_r = P(x,training=False)
+                    loss_pr = MeanSquaredError()(p_r,p_f)
+
+                loss_g = loss_mse + 1e-3*loss_pr + 1e-3*loss_gen
+
+            grad = gen_tape.gradient(loss_g,G.trainable_weights)
+            g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
+            if epoch>=opt.init_epochs:
+                grad_d = disc_tape.gradient(loss_d,D.trainable_weights)
+                d_optimizer.apply_gradients(zip(grad_d,D.trainable_weights))
+                if opt.gan_type =='wgan':
+                    for l in D.layers:
+                        weights = l.get_weights()
+                        weights = [np.clip(w, -opt.clip_value, opt.clip_value) for w in weights]
+                        l.set_weights(weights)
+
+            x_true_train +=list(x.numpy())
+            x_pred_train +=list(x_pred_orig.numpy())
+            y_true = np.argmax(C(x,training=False),axis=1)
+            y_pred = np.argmax(C(x_pred_orig,training=False),axis=1)
+            y_true_train = np.append(y_true_train, y_true)
+            y_pred_train = np.append(y_pred_train, y_pred)
+            print(
+                "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}, adv:{:.6f}, d_fake_loss:{:.6f},"
+                " d_real_loss:{:.6f},  gradient_penalty:{:.6f}".format(epoch,
+                                                                       opt.epochs, step, n_steps_train,
+                                                                       time.time() - step_time, loss_mse, loss_pr,
+                                                                       loss_gen, f_loss, r_loss, grad_p))
+
+        x_true_train = np.array(x_true_train)
+        x_pred_train = np.array(x_pred_train)
+        train_mse = np.mean((x_true_train-x_pred_train)**2)
+        train_task_score = accuracy_score(y_true_train,y_pred_train)
+        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+            epoch, opt.epochs, train_mse, train_task_score))
+
+        # Update Learning Rate
+        if epoch != 0 and (epoch % opt.decay_every == 0):
+            new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
+            lr_v.assign(opt.init_lr * new_lr_decay)
+            print("New learning rate", opt.init_lr * new_lr_decay)
+
+        x_true_test = []
+        x_pred_test = []
+        y_true_test = np.array([], dtype='int32')
+        y_pred_test = np.array([], dtype='int32')
+        for step,(x_m,mask,x,y) in enumerate(test_ds):
+            step_time = time.time()
+            x_m_mask = tf.concat([x_m,mask],axis=-1)
+            x_pred = G(x_m_mask,training=False)
+            x_pred_orig = x*mask + x_pred*(1-mask)
+            x_true_test += list(x.numpy())
+            x_pred_test += list(x_pred_orig.numpy())
+            y_true = np.argmax(C(x, training=False), axis=1)
+            y_pred = np.argmax(C(x_pred_orig, training=False), axis=1)
+            y_true_test = np.append(y_true_test, y_true)
+            y_pred_test = np.append(y_pred_test, y_pred)
+            print("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
+                epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
+
+        x_true_test = np.array(x_true_test)
+        x_pred_test = np.array(x_pred_test)
+        test_mse = np.mean((x_true_test- x_pred_test)**2)
+        test_task_score= accuracy_score(y_true_test, y_pred_test)
+        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+            epoch, opt.epochs, test_mse, test_task_score))
+        if test_mse < prev_best:
+            G.save(os.path.join(opt.save_dir,'best_gen_imp_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+            D.save(os.path.join(opt.save_dir,
+                                'best_disc_imp_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
+                                    opt.use_perception_loss) + '.pt'))
+            print('Saving Best generator with best MSE:', test_mse)
+            prev_best = test_mse
+        G.save(os.path.join(opt.save_dir,'last_gen_imp_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+        D.save(os.path.join(opt.save_dir,
+                            'last_disc_imp_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
+                                opt.use_perception_loss) + '.pt'))
 
 
 
