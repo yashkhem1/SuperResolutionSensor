@@ -522,10 +522,10 @@ def train_imp(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_cnn_imp_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_cnn_imp_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_cnn_imp_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_cnn_imp_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
 
 
 # ===============================================================
@@ -690,16 +690,16 @@ def train_imp_gan(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_gen_imp_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_gen_imp_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
             D.save(os.path.join(opt.save_dir,
-                                'best_disc_imp_' +str(opt.gan_type)+'_'+ str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
-                                    opt.use_perception_loss) + '.pt'))
+                                'best_disc_imp_' +str(opt.gan_type)+'_'+ str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
+                                    opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_gen_imp_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_gen_imp_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
         D.save(os.path.join(opt.save_dir,
-                            'last_disc_imp_'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
-                                opt.use_perception_loss) + '.pt'))
+                            'last_disc_imp_'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
+                                opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
 
 
 
