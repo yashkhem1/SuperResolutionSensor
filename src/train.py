@@ -458,7 +458,7 @@ def train_imp(opt):
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
                 loss_mse = MeanSquaredError()((1-mask)*x,(1-mask)*x_pred)
-                x_pred_orig = x*mask+x_pred*(1-mask)
+                x_pred_orig = x_m*mask+x_pred*(1-mask)
                 loss_pr = 0
                 if opt.use_perception_loss:
                     p_f = P(x_pred_orig,training=False)
@@ -498,7 +498,7 @@ def train_imp(opt):
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
             x_pred = G(x_m_mask,training=False)
-            x_pred_orig = x*mask+x_pred*(1-mask)
+            x_pred_orig = x_m*mask+x_pred*(1-mask)
             x_true_test += list(x.numpy())
             x_pred_test += list(x_pred_orig.numpy())
             y_true = np.argmax(y, axis=1)
@@ -569,7 +569,7 @@ def train_imp_gan(opt):
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
                 loss_mse = MeanSquaredError()((1-mask)*x,(1-mask)*x_pred)
-                x_pred_orig = x*mask +x_pred*(1-mask)
+                x_pred_orig = x_m*mask +x_pred*(1-mask)
                 loss_gen = 0
                 f_loss = 0
                 r_loss = 0
@@ -659,7 +659,7 @@ def train_imp_gan(opt):
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
             x_pred = G(x_m_mask,training=False)
-            x_pred_orig = x*mask + x_pred*(1-mask)
+            x_pred_orig = x_m*mask + x_pred*(1-mask)
             x_true_test += list(x.numpy())
             x_pred_test += list(x_pred_orig.numpy())
             y_true = np.argmax(C(x, training=False), axis=1)

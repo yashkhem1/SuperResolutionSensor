@@ -56,7 +56,7 @@ def evaluate_ecg_imp(opt):
 
     test_X_m_mask = np.concatenate([test_X_m,test_mask],axis=-1)
     x_pred = G.predict(test_X_m_mask,batch_size=opt.test_batch_size,verbose=1)
-    x_pred = x_true*test_mask + x_pred*(1-test_mask)
+    x_pred = test_X_m*test_mask + x_pred*(1-test_mask)
     y_true = np.argmax(test_Y, axis=1)
     y_pred_sr = np.argmax(C.predict(x_pred, batch_size=opt.test_batch_size, verbose=1), axis=1)
     y_pred_hr = np.argmax(C.predict(x_true, batch_size=opt.test_batch_size, verbose=1), axis=1)
