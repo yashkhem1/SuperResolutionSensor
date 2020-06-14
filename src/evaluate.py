@@ -49,7 +49,7 @@ def evaluate_ecg_imp(opt):
     test_X_m = np.zeros(test_X.shape)
     test_mask = np.ones(test_X.shape)
     for i, data in enumerate(test_X):
-        missing_indices = np.random.choice(indices, n_missing)
+        missing_indices = np.random.choice(indices, n_missing,replace=False)
         test_X_m[i] = data
         test_X_m[i][missing_indices] = 0
         test_mask[i][missing_indices] = 0
