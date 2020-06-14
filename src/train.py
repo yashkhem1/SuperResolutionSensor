@@ -146,12 +146,12 @@ def train_clf(opt):
         else:
             sr_string = '0'
             use_perception='0'
-        if accuracy_test > prev_best:
+        if f1_test > prev_best:
             C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
                                 + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
                                 '_weighted_' + str(opt.weighted) + '.pt'))
             print('Saving Best generator with best accuracy:', accuracy_test, 'and F1 score:', f1_test)
-            prev_best = accuracy_test
+            prev_best = f1_test
         C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
                                 + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
                                 '_weighted_' + str(opt.weighted) + '.pt'))
@@ -212,7 +212,7 @@ def train_sr(opt):
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
             x_true_train +=list(hr.numpy())
             x_pred_train +=list(hr_f.numpy())
-            y_true = np.argmax(C(hr,training=False),axis=1)
+            y_true = np.argmax(y,axis=1)
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
@@ -222,8 +222,8 @@ def train_sr(opt):
         x_true_train = np.array(x_true_train)
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
-        train_task_score = accuracy_score(y_true_train,y_pred_train)
-        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+        train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
+        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
@@ -241,7 +241,7 @@ def train_sr(opt):
             hr_f = G(lr,training=False)
             x_true_test += list(hr.numpy())
             x_pred_test += list(hr_f.numpy())
-            y_true = np.argmax(C(hr, training=False), axis=1)
+            y_true = np.argmax(y, axis=1)
             y_pred = np.argmax(C(hr_f, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
             y_pred_test = np.append(y_pred_test, y_pred)
@@ -251,8 +251,8 @@ def train_sr(opt):
         x_true_test = np.array(x_true_test)
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
-        test_task_score= accuracy_score(y_true_test, y_pred_test)
-        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+        test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
+        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
@@ -371,8 +371,8 @@ def train_sr_gan(opt):
         x_true_train = np.array(x_true_train)
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
-        train_task_score = accuracy_score(y_true_train,y_pred_train)
-        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+        train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
+        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
@@ -400,8 +400,8 @@ def train_sr_gan(opt):
         x_true_test = np.array(x_true_test)
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test - x_pred_test)**2)
-        test_task_score = accuracy_score(y_true_test, y_pred_test)
-        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+        test_task_score = f1_score(y_true_test, y_pred_test,average='macro')
+        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_gen_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
@@ -470,7 +470,7 @@ def train_imp(opt):
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
             x_true_train +=list(x.numpy())
             x_pred_train +=list(x_pred_orig.numpy())
-            y_true = np.argmax(C(x,training=False),axis=1)
+            y_true = np.argmax(y,axis=1)
             y_pred = np.argmax(C(x_pred_orig,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
@@ -480,8 +480,8 @@ def train_imp(opt):
         x_true_train = np.array(x_true_train)
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
-        train_task_score = accuracy_score(y_true_train,y_pred_train)
-        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+        train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
+        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
@@ -501,7 +501,7 @@ def train_imp(opt):
             x_pred_orig = x*mask+x_pred*(1-mask)
             x_true_test += list(x.numpy())
             x_pred_test += list(x_pred_orig.numpy())
-            y_true = np.argmax(C(x, training=False), axis=1)
+            y_true = np.argmax(y, axis=1)
             y_pred = np.argmax(C(x_pred_orig, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
             y_pred_test = np.append(y_pred_test, y_pred)
@@ -511,8 +511,8 @@ def train_imp(opt):
         x_true_test = np.array(x_true_test)
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
-        test_task_score= accuracy_score(y_true_test, y_pred_test)
-        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+        test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
+        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn_imp_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
@@ -641,8 +641,8 @@ def train_imp_gan(opt):
         x_true_train = np.array(x_true_train)
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
-        train_task_score = accuracy_score(y_true_train,y_pred_train)
-        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+        train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
+        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
@@ -672,8 +672,8 @@ def train_imp_gan(opt):
         x_true_test = np.array(x_true_test)
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
-        test_task_score= accuracy_score(y_true_test, y_pred_test)
-        print("Epoch: [{}/{}]  mse:{:.6f}, accuracy_score:{:.6f} ".format(
+        test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
+        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_gen_imp_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))

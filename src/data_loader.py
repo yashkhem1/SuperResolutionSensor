@@ -108,13 +108,7 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
         train_X = train_X[:, ::sampling_ratio, :]
         if sr_model:
             G = load_model(sr_model)
-            i = 0
-            train_X_sr = np.zeros((train_X.shape[0],192,1))
-            while (i <= len(train_X)):
-                print(i)
-                train_X_sr[i:min(i+5000,len(train_X))] = G(train_X[i:min(i+5000,len(train_X))],training=False).numpy()
-                i+=5000
-            train_X = train_X_sr
+            train_X = G.predict(train_X,batch_size=batch_size,verbose=1)
             print(len(train_X))
 
     #defining the generator to generate dataset
@@ -143,7 +137,8 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_
         test_X = test_X[:, ::sampling_ratio, :]
         if sr_model:
             G = load_model(sr_model)
-            test_X = G(test_X,training=False).numpy()
+            test_X = G.predict(test_X,batch_size=batch_size,verbose=1)
+            print(len(test_X))
 
     # defining the generator to generate dataset
     def generator():
@@ -229,7 +224,7 @@ def train_imp_dataset(data_type,batch_size, prob, seed,shuffle_buffer_size=1000,
         train_X_m = np.zeros(train_X.shape)
         train_mask = np.ones(train_X.shape)
         for i,data in enumerate(train_X):
-            missing_indices = np.random.choice(indices,n_missing)
+            missing_indices = np.random.choice(indices,n_missing,replace=False)
             train_X_m[i] = data
             train_X_m[i][missing_indices]=0
             train_mask[i][missing_indices]=0
@@ -265,7 +260,7 @@ def test_imp_dataset(data_type,batch_size,prob,seed,fetch_buffer_size=2):
         test_X_m = np.zeros(test_X.shape)
         test_mask = np.ones(test_X.shape)
         for i, data in enumerate(test_X):
-            missing_indices = np.random.choice(indices, n_missing)
+            missing_indices = np.random.choice(indices, n_missing,replace=False)
             test_X_m[i] = data
             test_X_m[i][missing_indices] = 0
             test_mask[i][missing_indices] = 0

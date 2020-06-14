@@ -11,9 +11,9 @@ def evaluate_clf(opt):
         test_X = test_X[:,::opt.sampling_ratio,:]
     if opt.use_sr_clf:
         G = load_model(opt.model_path)
-        test_X = G(test_X,training=False).numpy()
+        test_X = G.predict(test_X,batch_size=opt.test_batch_size,verbose=1)
     y_true = np.argmax(test_Y,axis=1)
-    y_pred = np.argmax(C(test_X,training=False),axis=1)
+    y_pred = np.argmax(C.predict(test_X,batch_size=opt.test_batch_size,verbose=1),axis=1)
     accuracy = accuracy_score(y_true,y_pred)
     f1 = f1_score(y_true,y_pred,average='macro')
     cf_matrix = confusion_matrix(y_true,y_pred)
@@ -26,10 +26,10 @@ def evaluate_ecg_sr(opt):
     C = load_model(opt.classifier_path)
     test_X,test_Y = read_test_data(opt.data_type)
     x_true = test_X
-    x_pred = G(x_true[:, ::opt.sampling_ratio, :],training=False).numpy()
+    x_pred = G.predict(x_true[:, ::opt.sampling_ratio, :],batch_size=opt.test_batch_size,verbose=1)
     y_true = np.argmax(test_Y,axis=1)
-    y_pred_sr = np.argmax(C(x_pred,training=False),axis=1)
-    y_pred_hr= np.argmax(C(x_true,training=False),axis=1)
+    y_pred_sr = np.argmax(C.predict(x_pred,batch_size=opt.test_batch_size,verbose=1),axis=1)
+    y_pred_hr= np.argmax(C.predict(x_true,batch_size=opt.test_batch_size,verbose=1),axis=1)
     print('MSE: ', np.mean((x_true-x_pred)**2))
     print('Accuracy HR: ', accuracy_score(y_true,y_pred_hr))
     print('Accuracy SR: ', accuracy_score(y_true, y_pred_sr))
@@ -37,3 +37,34 @@ def evaluate_ecg_sr(opt):
     print('F1_score SR: ', f1_score(y_true, y_pred_sr, average='macro'))
     print('Confusion Matrix HR: ', confusion_matrix(y_true,y_pred_hr))
     print('Confusion Matrix SR: ', confusion_matrix(y_true, y_pred_sr))
+
+def evaluate_ecg_imp(opt):
+    G = load_model(opt.model_path)
+    C = load_model(opt.classifier_path)
+    test_X, test_Y = read_test_data(opt.data_type)
+    x_true = test_X
+    np.random.seed(opt.seed)
+    indices = np.arange(192)
+    n_missing = int(opt.prob * 192)
+    test_X_m = np.zeros(test_X.shape)
+    test_mask = np.ones(test_X.shape)
+    for i, data in enumerate(test_X):
+        missing_indices = np.random.choice(indices, n_missing)
+        test_X_m[i] = data
+        test_X_m[i][missing_indices] = 0
+        test_mask[i][missing_indices] = 0
+
+    test_X_m_mask = np.concatenate([test_X_m,test_mask],axis=-1)
+    x_pred = G.predict(test_X_m_mask,batch_size=opt.test_batch_size,verbose=1)
+    x_pred = x_true*test_mask + x_pred*(1-test_mask)
+    y_true = np.argmax(test_Y, axis=1)
+    y_pred_sr = np.argmax(C.predict(x_pred, batch_size=opt.test_batch_size, verbose=1), axis=1)
+    y_pred_hr = np.argmax(C.predict(x_true, batch_size=opt.test_batch_size, verbose=1), axis=1)
+    print('MSE: ', np.mean((x_true - x_pred) ** 2))
+    print('Accuracy HR: ', accuracy_score(y_true, y_pred_hr))
+    print('Accuracy SR: ', accuracy_score(y_true, y_pred_sr))
+    print('F1_score HR: ', f1_score(y_true, y_pred_hr, average='macro'))
+    print('F1_score SR: ', f1_score(y_true, y_pred_sr, average='macro'))
+    print('Confusion Matrix HR: ', confusion_matrix(y_true, y_pred_hr))
+    print('Confusion Matrix SR: ', confusion_matrix(y_true, y_pred_sr))
+
