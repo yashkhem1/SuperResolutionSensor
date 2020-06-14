@@ -26,16 +26,12 @@ class Options:
         self.parser.add_argument('--model_type', type=str, help='Train_Type')
         self.parser.add_argument('--save_dir', type=str, default='ckpt',help='Directory for saving model')
         self.parser.add_argument('--use_perception_loss', type=int, default=0, help='Use perception loss')
-        self.parser.add_argument('--sampling_ratio', type=int, default=1, help='Downsampling factor')
         self.parser.add_argument('--classifier_path', type=str, default='',
                                  help='Path to classification model for task based loss')
         self.parser.add_argument('--init_epochs',type=int,default=0,help='Initial epochs without adversarial loss')
         self.parser.add_argument('--model_path', type=str, default='',
-                                 help='Path to  model for evaluation results')
+                                 help='Path to generative model for evaluation results')
         self.parser.add_argument('--evaluate', type=int, default=0, help='Evaluate model on test dataset')
-        self.parser.add_argument('--use_sr_clf', type=int, default=0, help='Use super-resolved data for classification')
-        self.parser.add_argument('-seed', type=int, default=1, help='Random Seed')
-        self.parser.add_argument('--prob', type = float, default=0.1, help='Probability of missing data')
 
         # ===============================================================
         #                     GAN options
@@ -44,6 +40,18 @@ class Options:
         self.parser.add_argument('--clip_value',type=float,default=0.01,help='Clip value for WGAN')
         self.parser.add_argument('--gp_lambda',type=float,default=10,help='Multiplier for Gradient Penalty')
 
+        # ===============================================================
+        #                     Super Resolution Options
+        # ===============================================================
+        self.parser.add_argument('--use_sr_clf', type=int, default=0, help='Use super-resolution data for classification')
+        self.parser.add_argument('--sampling_ratio', type=int, default=1, help='Downsampling factor')
+
+        # ===============================================================
+        #                 Missing Data Imputation Options
+        # ===============================================================
+        self.parser.add_argument('-seed', type=int, default=1, help='Random Seed for missing data')
+        self.parser.add_argument('--prob', type=float, default=0.1, help='Probability of missing data')
+        self.parser.add_argument('--masked_mse_loss', type=int, default=1, help='Use MSE loss between imputed values')
 
 
 

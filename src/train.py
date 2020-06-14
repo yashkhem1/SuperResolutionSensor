@@ -457,8 +457,12 @@ def train_imp(opt):
             with tf.GradientTape(persistent=True) as tape:
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
-                loss_mse = MeanSquaredError()((1-mask)*x,(1-mask)*x_pred)
-                x_pred_orig = x_m*mask+x_pred*(1-mask)
+                if opt.masked_mse_loss:
+                    loss_mse = MeanSquaredError()((1 - mask) * x, (1 - mask) * x_pred)
+                    x_pred_orig = x_m * mask + x_pred * (1 - mask)
+                else:
+                    loss_mse = MeanSquaredError()(x, x_pred)
+                    x_pred_orig = x_pred
                 loss_pr = 0
                 if opt.use_perception_loss:
                     p_f = P(x_pred_orig,training=False)
@@ -498,7 +502,10 @@ def train_imp(opt):
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
             x_pred = G(x_m_mask,training=False)
-            x_pred_orig = x_m*mask+x_pred*(1-mask)
+            if opt.masked_mse_loss:
+                x_pred_orig = x_m*mask+x_pred*(1-mask)
+            else:
+                x_pred_orig = x_pred
             x_true_test += list(x.numpy())
             x_pred_test += list(x_pred_orig.numpy())
             y_true = np.argmax(y, axis=1)
@@ -568,8 +575,12 @@ def train_imp_gan(opt):
             with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
-                loss_mse = MeanSquaredError()((1-mask)*x,(1-mask)*x_pred)
-                x_pred_orig = x_m*mask +x_pred*(1-mask)
+                if opt.masked_mse_loss:
+                    loss_mse = MeanSquaredError()((1-mask)*x,(1-mask)*x_pred)
+                    x_pred_orig = x_m*mask +x_pred*(1-mask)
+                else:
+                    loss_mse = MeanSquaredError()(x, x_pred)
+                    x_pred_orig = x_pred
                 loss_gen = 0
                 f_loss = 0
                 r_loss = 0
@@ -659,7 +670,10 @@ def train_imp_gan(opt):
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
             x_pred = G(x_m_mask,training=False)
-            x_pred_orig = x_m*mask + x_pred*(1-mask)
+            if opt.masked_mse_loss:
+                x_pred_orig = x_m*mask + x_pred*(1-mask)
+            else:
+                x_pred_orig = x_pred
             x_true_test += list(x.numpy())
             x_pred_test += list(x_pred_orig.numpy())
             y_true = np.argmax(C(x, training=False), axis=1)
