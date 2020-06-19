@@ -438,9 +438,9 @@ def train_imp(opt):
     lr_v = tf.Variable(opt.init_lr)
     g_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
 
-    train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.shuffle_buffer_size,
+    train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.cont,opt.shuffle_buffer_size,
                                 opt.fetch_buffer_size, opt.resample)
-    test_ds = test_imp_dataset(opt.data_type, opt.test_batch_size, opt.prob, opt.seed, opt.fetch_buffer_size)
+    test_ds = test_imp_dataset(opt.data_type, opt.test_batch_size, opt.prob, opt.seed, opt.cont, opt.fetch_buffer_size)
     prev_best = np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -458,7 +458,7 @@ def train_imp(opt):
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
                 if opt.masked_mse_loss:
-                    loss_mse = MeanSquaredError()((1 - mask) * x, (1 - mask) * x_pred)
+                    loss_mse = MeanSquaredError()((1 - mask) * x, (1 - mask) * x_pred)/opt.prob
                     x_pred_orig = x_m * mask + x_pred * (1 - mask)
                 else:
                     loss_mse = MeanSquaredError()(x, x_pred)
@@ -521,11 +521,15 @@ def train_imp(opt):
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
+        if opt.cont:
+            str_imp = 'imp_cont_'
+        else:
+            str_imp = 'imp'
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_cnn_imp_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_cnn_'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_cnn_imp_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_cnn_'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
 
 
 # ===============================================================
@@ -556,9 +560,9 @@ def train_imp_gan(opt):
     g_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
     d_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
 
-    train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.shuffle_buffer_size,
+    train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.cont, opt.shuffle_buffer_size,
                                 opt.fetch_buffer_size, opt.resample)
-    test_ds = test_imp_dataset(opt.data_type, opt.test_batch_size, opt.prob, opt.seed, opt.fetch_buffer_size)
+    test_ds = test_imp_dataset(opt.data_type, opt.test_batch_size, opt.prob, opt.seed, opt.cont, opt.fetch_buffer_size)
     prev_best = np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -576,7 +580,7 @@ def train_imp_gan(opt):
                 x_m_mask = tf.concat([x_m,mask],axis=-1)
                 x_pred = G(x_m_mask,training=True)
                 if opt.masked_mse_loss:
-                    loss_mse = MeanSquaredError()((1-mask)*x,(1-mask)*x_pred)
+                    loss_mse = MeanSquaredError()((1-mask)*x,(1-mask)*x_pred)/opt.prob
                     x_pred_orig = x_m*mask +x_pred*(1-mask)
                 else:
                     loss_mse = MeanSquaredError()(x, x_pred)
@@ -689,16 +693,20 @@ def train_imp_gan(opt):
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
+        if opt.cont:
+            str_imp = 'imp_cont_'
+        else:
+            str_imp = 'imp'
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_gen_imp_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_gen_'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
             D.save(os.path.join(opt.save_dir,
-                                'best_disc_imp_' +str(opt.gan_type)+'_'+ str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
+                                'best_disc_'+str_imp +str(opt.gan_type)+'_'+ str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
                                     opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_gen_imp_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_gen_'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
         D.save(os.path.join(opt.save_dir,
-                            'last_disc_imp_'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
+                            'last_disc_'+str_imp+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
                                 opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
 
 

@@ -202,7 +202,7 @@ def test_sr_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
     test_ds = test_ds.batch(batch_size)
     return test_ds
 
-def train_imp_dataset(data_type,batch_size, prob, seed,shuffle_buffer_size=1000,fetch_buffer_size=2, resample=False):
+def train_imp_dataset(data_type,batch_size, prob, seed, cont=False,shuffle_buffer_size=1000,fetch_buffer_size=2, resample=False):
     '''
     Returns train dataset for missing data imputation model for the given sampling ratio
     :param data_type: str
@@ -224,7 +224,11 @@ def train_imp_dataset(data_type,batch_size, prob, seed,shuffle_buffer_size=1000,
         train_X_m = np.zeros(train_X.shape)
         train_mask = np.ones(train_X.shape)
         for i,data in enumerate(train_X):
-            missing_indices = np.random.choice(indices,n_missing,replace=False)
+            if cont:
+                missing_start =np.random.randint(0,int((1-prob)*192)+1)
+                missing_indices = np.arange(missing_start,missing_start+n_missing)
+            else:
+                missing_indices = np.random.choice(indices,n_missing,replace=False)
             train_X_m[i] = data
             train_X_m[i][missing_indices]=0
             train_mask[i][missing_indices]=0
@@ -242,7 +246,7 @@ def train_imp_dataset(data_type,batch_size, prob, seed,shuffle_buffer_size=1000,
     train_ds = train_ds.batch(batch_size)
     return train_ds
 
-def test_imp_dataset(data_type,batch_size,prob,seed,fetch_buffer_size=2):
+def test_imp_dataset(data_type,batch_size,prob,seed,cont=False,fetch_buffer_size=2):
     '''
     Returns test dataset for super resolution model for the given sampling ratio
     :param data_type: str
@@ -260,7 +264,11 @@ def test_imp_dataset(data_type,batch_size,prob,seed,fetch_buffer_size=2):
         test_X_m = np.zeros(test_X.shape)
         test_mask = np.ones(test_X.shape)
         for i, data in enumerate(test_X):
-            missing_indices = np.random.choice(indices, n_missing,replace=False)
+            if cont:
+                missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+                missing_indices = np.arange(missing_start, missing_start + n_missing)
+            else:
+                missing_indices = np.random.choice(indices, n_missing, replace=False)
             test_X_m[i] = data
             test_X_m[i][missing_indices] = 0
             test_mask[i][missing_indices] = 0
