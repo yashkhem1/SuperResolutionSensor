@@ -36,7 +36,7 @@ class Options:
         # ===============================================================
         #                     GAN options
         # ===============================================================
-        self.parser.add_argument('--gan_type', type=str,default='normal',help='Type of GAN Loss', choices=['normal','wgan','wgan_gp','normal_ls'])
+        self.parser.add_argument('--gan_type', type=str,default='normal',help='Type of GAN Loss', choices=['normal','wgan','wgangp','normalls'])
         self.parser.add_argument('--clip_value',type=float,default=0.01,help='Clip value for WGAN')
         self.parser.add_argument('--gp_lambda',type=float,default=10,help='Multiplier for Gradient Penalty')
 
@@ -50,7 +50,7 @@ class Options:
         #                 Missing Data Imputation Options
         # ===============================================================
         self.parser.add_argument('-seed', type=int, default=1, help='Random Seed for missing data')
-        self.parser.add_argument('--prob', type=float, default=0.1, help='Probability of missing data')
+        self.parser.add_argument('--prob', type=float, default=0.0, help='Probability of missing data')
         self.parser.add_argument('--masked_mse_loss', type=int, default=1, help='Use MSE loss between imputed values')
         self.parser.add_argument('--cont', type=int, default=0, help='Continuous chunk missing')
         self.parser.add_argument('--use_imp_clf', type=int, default=0, help='Use missing_data_imputation for classification')

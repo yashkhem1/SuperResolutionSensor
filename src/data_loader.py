@@ -91,7 +91,8 @@ def read_test_data(data_type):
 
         return test_X,test_Y
 
-def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2,resample=False, sr_model= None):
+def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2,resample=False, sr_model= None,
+                     prob=0,seed=1,cont=False,imp_model=None):
     '''
     Returns the train dataset for classification model
     :param data_type: str
@@ -105,11 +106,38 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
     train_X,train_Y = read_train_data(data_type,resample)
     #downsample the high resolution data
     if data_type == 'ecg':
-        train_X = train_X[:, ::sampling_ratio, :]
-        if sr_model:
-            G = load_model(sr_model)
-            train_X = G.predict(train_X,batch_size=batch_size,verbose=1)
-            print(len(train_X))
+        if sampling_ratio!=1:
+            train_X = train_X[:, ::sampling_ratio, :]
+            if sr_model:
+                G = load_model(sr_model)
+                train_X = G.predict(train_X,batch_size=batch_size,verbose=1)
+                print(len(train_X))
+
+        if  prob!=0:
+            np.random.seed(seed)
+            indices = np.arange(192)
+            n_missing = int(prob * 192)
+            train_X_m = np.zeros(train_X.shape)
+            train_mask = np.ones(train_X.shape)
+            for i, data in enumerate(train_X):
+                if cont:
+                    missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+                    missing_indices = np.arange(missing_start, missing_start + n_missing)
+                else:
+                    missing_indices = np.random.choice(indices, n_missing, replace=False)
+                train_X_m[i] = data
+                train_X_m[i][missing_indices] = 0
+                train_mask[i][missing_indices] = 0
+
+            if imp_model:
+                G = load_model(imp_model)
+                train_X_m_mask = np.concatenate([train_X_m,train_mask],axis=-1)
+                x_pred = G.predict(train_X_m_mask,batch_size=batch_size,verbose=1)
+                train_X = train_X_m*train_mask + x_pred*(1-train_mask)
+
+            else:
+                train_X = train_X_m
+
 
     #defining the generator to generate dataset
     def generator():
@@ -122,7 +150,8 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
     train_ds = train_ds.batch(batch_size)
     return train_ds
 
-def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_model = None):
+def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_model = None, prob=0, seed=1, cont=False,
+                    imp_model = None):
     '''
     Returns the test dataloader for classification model
     :param data_type: str
@@ -134,11 +163,39 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_
     test_X, test_Y = read_test_data(data_type)
     #downsample the high resolution data
     if data_type == 'ecg':
-        test_X = test_X[:, ::sampling_ratio, :]
-        if sr_model:
-            G = load_model(sr_model)
-            test_X = G.predict(test_X,batch_size=batch_size,verbose=1)
-            print(len(test_X))
+        if sampling_ratio!=1:
+            test_X = test_X[:, ::sampling_ratio, :]
+            if sr_model:
+                G = load_model(sr_model)
+                test_X = G.predict(test_X,batch_size=batch_size,verbose=1)
+                print(len(test_X))
+
+        if prob != 0:
+            np.random.seed(seed)
+            indices = np.arange(192)
+            n_missing = int(prob * 192)
+            test_X_m = np.zeros(test_X.shape)
+            test_mask = np.ones(test_X.shape)
+            for i, data in enumerate(test_X):
+                if cont:
+                    missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+                    missing_indices = np.arange(missing_start, missing_start + n_missing)
+                else:
+                    missing_indices = np.random.choice(indices, n_missing, replace=False)
+                test_X_m[i] = data
+                test_X_m[i][missing_indices] = 0
+                test_mask[i][missing_indices] = 0
+
+            if imp_model:
+                G = load_model(imp_model)
+                test_X_m_mask = np.concatenate([test_X_m, test_mask], axis=-1)
+                x_pred = G.predict(test_X_m_mask, batch_size=batch_size, verbose=1)
+                test_X = test_X_m * test_mask + x_pred * (1 - test_mask)
+
+            else:
+                test_X = test_X_m
+
+
 
     # defining the generator to generate dataset
     def generator():

@@ -70,13 +70,17 @@ def train_clf(opt):
     lr_v = tf.Variable(opt.init_lr)
     c_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
     sr_model = None
+    imp_model  = None
     if opt.use_sr_clf:
         sr_model = opt.model_path
+    if opt.use_imp_clf:
+        imp_model = opt.model_path
 
     train_ds = train_cf_dataset(opt.data_type,opt.sampling_ratio,opt.train_batch_size,opt.shuffle_buffer_size,opt.fetch_buffer_size,
-                                opt.resample,sr_model)
+                                opt.resample,sr_model,opt.prob,opt.seed,opt.cont,imp_model)
 
-    test_ds = test_cf_dataset(opt.data_type,opt.sampling_ratio,opt.test_batch_size,opt.fetch_buffer_size,sr_model)
+    test_ds = test_cf_dataset(opt.data_type,opt.sampling_ratio,opt.test_batch_size,opt.fetch_buffer_size,sr_model,opt.prob,
+                              opt.seed, opt.cont, imp_model)
     prev_best = -1*np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -142,19 +146,40 @@ def train_clf(opt):
         if opt.use_sr_clf:
             model_defs = opt.model_path.split('/')[-1].split('_')
             sr_string = model_defs[1]
-            use_perception = model_defs[4]
+            use_perception = model_defs[4][:-3]
         else:
             sr_string = '0'
             use_perception='0'
+
+        if opt.use_imp_clf:
+            model_defs = opt.model_path.split('/')[-1].split('_')
+            imp_string = model_defs[1]
+            use_perception = model_defs[4]
+            masked_loss = model_defs[5][:-3]
+        else:
+            imp_string = '0'
+            use_perception = '0'
+            masked_loss = '0'
+
         if f1_test > prev_best:
-            C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
-                                + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
-                                '_weighted_' + str(opt.weighted) + '.pt'))
+            if opt.prob==0:
+                C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
+                                    + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
+                                    '_weighted_' + str(opt.weighted) + '.pt'))
+            else:
+                C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '_prob_' + str(opt.prob)
+                                 + '_imp_' + imp_string + '_perception_' + use_perception + '_maskedloss_'+masked_loss+
+                                '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.pt'))
             print('Saving Best generator with best accuracy:', accuracy_test, 'and F1 score:', f1_test)
             prev_best = f1_test
-        C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
-                                + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
-                                '_weighted_' + str(opt.weighted) + '.pt'))
+        if opt.prob==0:
+            C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
+                                    + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
+                                    '_weighted_' + str(opt.weighted) + '.pt'))
+        else:
+            C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '_prob_' + str(opt.prob)
+                                + '_imp_' + imp_string + '_perception_' + use_perception + '_maskedloss_' + masked_loss +
+                                '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.pt'))
 
 
 
@@ -322,7 +347,7 @@ def train_sr_gan(opt):
                         r_loss = MeanSquaredError()(tf.ones_like(logits_r),logits_r)
                         loss_d = f_loss + r_loss
                         loss_gen = MeanSquaredError()(tf.ones_like(logits_f),logits_f)
-                    elif opt.gan_type == 'normal_ls':
+                    elif opt.gan_type == 'normalls':
                         f_loss = MeanSquaredError()(tf.zeros_like(logits_f) + tf.random.uniform(logits_f.shape,0,1)*0.3,logits_f) # Label Smoothing
                         r_loss = MeanSquaredError()(tf.ones_like(logits_r) - 0.3 + tf.random.uniform(logits_f.shape,0,1)*0.5,logits_r)  # Label Smoothing
                         loss_d = f_loss + r_loss
@@ -332,7 +357,7 @@ def train_sr_gan(opt):
                         f_loss = tf.reduce_mean(logits_f)
                         loss_d = f_loss+r_loss
                         loss_gen = -tf.reduce_mean(logits_f)
-                    elif opt.gan_type =='wgan_gp':
+                    elif opt.gan_type =='wgangp':
                         r_loss = - tf.reduce_mean(logits_r)
                         f_loss = tf.reduce_mean(logits_f)
                         grad_p = gradient_penalty(D,hr,hr_f)
@@ -404,14 +429,14 @@ def train_sr_gan(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_gen_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
             D.save(os.path.join(opt.save_dir,
-                                'best_disc_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
+                                'best_disc-' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
                                     opt.use_perception_loss) + '.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_gen_'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
-        D.save(os.path.join(opt.save_dir, 'last_disc_'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
+        G.save(os.path.join(opt.save_dir,'last_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+        D.save(os.path.join(opt.save_dir, 'last_disc-'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
             opt.use_perception_loss) + '.pt'))
 
 
@@ -522,14 +547,14 @@ def train_imp(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if opt.cont:
-            str_imp = 'imp_cont_'
+            str_imp = 'imp-cont_'
         else:
-            str_imp = 'imp'
+            str_imp = 'imp_'
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_cnn_'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_cnn_'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
 
 
 # ===============================================================
@@ -599,7 +624,7 @@ def train_imp_gan(opt):
                         r_loss = MeanSquaredError()(tf.ones_like(logits_r), logits_r)
                         loss_d = f_loss + r_loss
                         loss_gen = MeanSquaredError()(tf.ones_like(logits_f), logits_f)
-                    elif opt.gan_type == 'normal_ls':
+                    elif opt.gan_type == 'normalls':
                         f_loss = MeanSquaredError()(
                             tf.zeros_like(logits_f) + tf.random.uniform(logits_f.shape, 0, 1) * 0.3,
                             logits_f)  # Label Smoothing
@@ -615,7 +640,7 @@ def train_imp_gan(opt):
                         f_loss = tf.reduce_mean(logits_f)
                         loss_d = f_loss + r_loss
                         loss_gen = -tf.reduce_mean(logits_f)
-                    elif opt.gan_type == 'wgan_gp':
+                    elif opt.gan_type == 'wgangp':
                         r_loss = - tf.reduce_mean(logits_r)
                         f_loss = tf.reduce_mean(logits_f)
                         grad_p = gradient_penalty(D, x, x_pred_orig)
@@ -694,19 +719,19 @@ def train_imp_gan(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if opt.cont:
-            str_imp = 'imp_cont_'
+            str_imp = 'imp-cont-'
         else:
-            str_imp = 'imp'
+            str_imp = 'imp-'
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_gen_'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_gen-'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
             D.save(os.path.join(opt.save_dir,
-                                'best_disc_'+str_imp +str(opt.gan_type)+'_'+ str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
+                                'best_disc-'+str_imp +str(opt.gan_type)+'_'+ str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
                                     opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_gen_'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_gen-'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
         D.save(os.path.join(opt.save_dir,
-                            'last_disc_'+str_imp+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
+                            'last_disc-'+str_imp+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
                                 opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
 
 
