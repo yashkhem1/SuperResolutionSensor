@@ -50,6 +50,8 @@ def plot_ecg_imp(prob,seed,cont,model_directory='ckpt',sample_number=None):
         sample_number = np.random.randint(test_X.shape[0])
         sample = test_X[sample_number]
 
+    sample_orig = sample.copy()
+
     indices = np.arange(192)
     n_missing = int(prob * 192)
     test_X_m = np.zeros(sample.shape)
@@ -74,7 +76,6 @@ def plot_ecg_imp(prob,seed,cont,model_directory='ckpt',sample_number=None):
                       'best_gen-imp-wgangp_ecg_' + str(prob) + '_0_1.pt',
                       'best_gen-imp-wgangp_ecg_' + str(prob) + '_1_1.pt']
 
-    sample_orig = sample.copy()
     sample_list = [sample_orig]
     for path in model_list:
         G = load_model(os.path.join(model_directory,path))
@@ -118,7 +119,7 @@ if __name__=="__main__":
         plot_ecg_sr(sampling_ratio,'ckpt',sample_number)
 
     elif plot_type=='imp':
-        prob = int(sys.argv[2])
+        prob = float(sys.argv[2])
         seed = int(sys.argv[3])
         cont = int(sys.argv[4])
         sample_number = None
