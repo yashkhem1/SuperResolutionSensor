@@ -41,8 +41,7 @@ def plot_ecg_sr(sampling_ratio, model_directory='ckpt',sample_number=None):
         plt.savefig('ecg_'+file_names[i]+'_'+str(sample_number)+'_'+str(sampling_ratio)+'.png')
 
 
-def plot_ecg_imp(prob,seed,cont,model_directory='ckpt',sample_number=None):
-    np.random.seed(seed)
+def plot_ecg_imp(prob,cont,model_directory='ckpt',sample_number=None):
     test_X, _ = read_test_data('ecg')
     if sample_number:
         sample = test_X[sample_number]
@@ -120,11 +119,10 @@ if __name__=="__main__":
 
     elif plot_type=='imp':
         prob = float(sys.argv[2])
-        seed = int(sys.argv[3])
-        cont = int(sys.argv[4])
+        cont = int(sys.argv[3])
         sample_number = None
-        if len(sys.argv)==6:
-            sample_number = int(sys.argv[5])
-        plot_ecg_imp(prob,seed,cont,'ckpt',sample_number)
+        if len(sys.argv)==5:
+            sample_number = int(sys.argv[4])
+        plot_ecg_imp(prob,cont,'ckpt',sample_number)
 
 
