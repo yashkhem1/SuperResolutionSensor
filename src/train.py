@@ -705,7 +705,7 @@ def train_imp_gan(opt):
                 x_pred_orig = x_pred
             x_true_test += list(x.numpy())
             x_pred_test += list(x_pred_orig.numpy())
-            y_true = np.argmax(C(x, training=False), axis=1)
+            y_true = np.argmax(y, axis=1)
             y_pred = np.argmax(C(x_pred_orig, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
             y_pred_test = np.append(y_pred_test, y_pred)
