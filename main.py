@@ -1,10 +1,13 @@
 from src.parsing import Options
 from src.train import train_clf, train_sr, train_sr_gan, train_imp, train_imp_gan
 from src.evaluate import evaluate_clf, evaluate_ecg_sr, evaluate_ecg_imp
+import os
 
 if __name__ == "__main__":
     opt = Options().parse()
     opt.decay_every = opt.epochs//2
+    if opt.save_dir:
+        os.makedirs(opt.save_dir,exist_ok=True)
 
     if opt.evaluate:
         if opt.model_type == 'clf':
