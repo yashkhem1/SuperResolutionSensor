@@ -431,7 +431,7 @@ def train_sr_gan(opt):
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
             D.save(os.path.join(opt.save_dir,
-                                'best_disc-' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
+                                'best_disc-'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
                                     opt.use_perception_loss) + '.pt'))
             print('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
