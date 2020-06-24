@@ -151,15 +151,16 @@ def train_clf(opt):
             sr_string = '0'
             use_perception='0'
 
-        if opt.use_imp_clf:
-            model_defs = opt.model_path.split('/')[-1].split('_')
-            imp_string = model_defs[1]
-            use_perception = model_defs[4]
-            masked_loss = model_defs[5][:-3]
-        else:
-            imp_string = '0'
-            use_perception = '0'
-            masked_loss = '0'
+        if opt.prob!=0:
+            if opt.use_imp_clf:
+                model_defs = opt.model_path.split('/')[-1].split('_')
+                imp_string = model_defs[1]
+                use_perception = model_defs[4]
+                masked_loss = model_defs[5][:-3]
+            else:
+                imp_string = '0'
+                use_perception = '0'
+                masked_loss = '0'
 
         if f1_test > prev_best:
             if opt.prob==0:
