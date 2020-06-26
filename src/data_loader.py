@@ -273,9 +273,9 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
     :return: Tensorflow Dataset
     '''
     train_X, train_Y = read_train_data(data_type,resample)
+    np.random.seed(seed)
     #downsampling the high resolution dataset
     if data_type == 'ecg':
-        np.random.seed(seed)
         indices = np.arange(192)
         n_missing = int(prob*192)
         if fixed:
@@ -290,7 +290,7 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
                 train_X_m[i] = data
                 train_X_m[i][missing_indices]=0
                 train_mask[i][missing_indices]=0
-                print("Loaded Training Data")
+            print("Loaded Training Data")
 
 
     # defining the generator to generate dataset
@@ -301,16 +301,16 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
             else:
                 if data_type == 'ecg':
                     sample = train_X[i]
-                    train_mask = np.ones(sample.shape)
+                    train_mask_sample = np.ones(sample.shape)
                     if cont:
                         missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
                         missing_indices = np.arange(missing_start, missing_start + n_missing)
                     else:
                         missing_indices = np.random.choice(indices, n_missing, replace=False)
-                    train_X_m = sample.copy()
-                    train_X_m[missing_indices]=0
-                    train_X_m[missing_indices]=0
-                    yield train_X_m,train_mask,train_X[i],train_Y[i]
+                    train_X_m_sample = sample.copy()
+                    train_X_m_sample[missing_indices]=0
+                    train_mask_sample[missing_indices]=0
+                    yield train_X_m_sample,train_mask_sample,train_X[i],train_Y[i]
 
 
 
