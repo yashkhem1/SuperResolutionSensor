@@ -259,7 +259,7 @@ def test_sr_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
     test_ds = test_ds.batch(batch_size)
     return test_ds
 
-def train_imp_dataset(data_type,batch_size, prob, seed, cont=False,shuffle_buffer_size=1000,fetch_buffer_size=2, resample=False):
+def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False, shuffle_buffer_size=1000,fetch_buffer_size=2, resample=False):
     '''
     Returns train dataset for missing data imputation model for the given sampling ratio
     :param data_type: str
@@ -278,24 +278,41 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False,shuffle_buffe
         np.random.seed(seed)
         indices = np.arange(192)
         n_missing = int(prob*192)
-        train_X_m = np.zeros(train_X.shape)
-        train_mask = np.ones(train_X.shape)
-        for i,data in enumerate(train_X):
-            if cont:
-                missing_start =np.random.randint(0,int((1-prob)*192)+1)
-                missing_indices = np.arange(missing_start,missing_start+n_missing)
-            else:
-                missing_indices = np.random.choice(indices,n_missing,replace=False)
-            train_X_m[i] = data
-            train_X_m[i][missing_indices]=0
-            train_mask[i][missing_indices]=0
+        if fixed:
+            train_X_m = np.zeros(train_X.shape)
+            train_mask = np.ones(train_X.shape)
+            for i,data in enumerate(train_X):
+                if cont:
+                    missing_start =np.random.randint(0,int((1-prob)*192)+1)
+                    missing_indices = np.arange(missing_start,missing_start+n_missing)
+                else:
+                    missing_indices = np.random.choice(indices,n_missing,replace=False)
+                train_X_m[i] = data
+                train_X_m[i][missing_indices]=0
+                train_mask[i][missing_indices]=0
+                print("Loaded Training Data")
 
-    print("Loaded Training Data")
 
     # defining the generator to generate dataset
     def generator():
         for i in range(len(train_X)):
-            yield train_X_m[i], train_mask[i],train_X[i], train_Y[i]
+            if fixed:
+                yield train_X_m[i], train_mask[i],train_X[i], train_Y[i]
+            else:
+                if data_type == 'ecg':
+                    sample = train_X[i]
+                    train_mask = np.ones(sample.shape)
+                    if cont:
+                        missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+                        missing_indices = np.arange(missing_start, missing_start + n_missing)
+                    else:
+                        missing_indices = np.random.choice(indices, n_missing, replace=False)
+                    train_X_m = sample.copy()
+                    train_X_m[missing_indices]=0
+                    train_X_m[missing_indices]=0
+                    yield train_X_m,train_mask,train_X[i],train_Y[i]
+
+
 
     train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32,tf.float32,tf.float32))
     train_ds = train_ds.shuffle(shuffle_buffer_size)

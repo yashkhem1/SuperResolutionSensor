@@ -464,7 +464,7 @@ def train_imp(opt):
     lr_v = tf.Variable(opt.init_lr)
     g_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
 
-    train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.cont,opt.shuffle_buffer_size,
+    train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.cont, opt.fixed, opt.shuffle_buffer_size,
                                 opt.fetch_buffer_size, opt.resample)
     test_ds = test_imp_dataset(opt.data_type, opt.test_batch_size, opt.prob, opt.seed, opt.cont, opt.fetch_buffer_size)
     prev_best = np.inf
@@ -586,7 +586,7 @@ def train_imp_gan(opt):
     g_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
     d_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
 
-    train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.cont, opt.shuffle_buffer_size,
+    train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.cont, opt.fixed, opt.shuffle_buffer_size,
                                 opt.fetch_buffer_size, opt.resample)
     test_ds = test_imp_dataset(opt.data_type, opt.test_batch_size, opt.prob, opt.seed, opt.cont, opt.fetch_buffer_size)
     prev_best = np.inf
