@@ -548,9 +548,15 @@ def train_imp(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if opt.cont:
-            str_imp = 'imp-cont_'
+            if not opt.fixed:
+                str_imp = 'imp-cont-fixed_'
+            else:
+                str_imp = 'imp-cont_'
         else:
-            str_imp = 'imp_'
+            if opt.fixed:
+                str_imp = 'imp-fixed_'
+            else:
+                str_imp = 'imp_'
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
             print('Saving Best generator with best MSE:', test_mse)
@@ -720,9 +726,15 @@ def train_imp_gan(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if opt.cont:
-            str_imp = 'imp-cont-'
+            if opt.fixed:
+                str_imp = 'imp-cont-fixed-'
+            else:
+                str_imp = 'imp-cont-'
         else:
-            str_imp = 'imp-'
+            if opt.fixed:
+                str_imp = 'imp-fixed-'
+            else:
+                str_imp = 'imp-'
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_gen-'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
             D.save(os.path.join(opt.save_dir,
