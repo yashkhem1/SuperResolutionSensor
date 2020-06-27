@@ -314,7 +314,7 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
         train_X_m_sample = sample.copy()
         train_X_m_sample[missing_indices] = 0
         train_mask_sample[missing_indices] = 0
-        yield train_X_m_sample, train_mask_sample, train_X, train_Y
+        return train_X_m_sample, train_mask_sample, train_X, train_Y
 
     if not fixed:
         if data_type=='ecg':
