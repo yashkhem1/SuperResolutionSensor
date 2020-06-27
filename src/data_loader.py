@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
 from sklearn.utils import class_weight
 from tensorflow.keras.models import load_model
+import multiprocessing
 
 import tensorflow as tf
 
@@ -299,22 +300,29 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
             if fixed:
                 yield train_X_m[i], train_mask[i],train_X[i], train_Y[i]
             else:
-                if data_type == 'ecg':
-                    sample = train_X[i]
-                    train_mask_sample = np.ones(sample.shape)
-                    if cont:
-                        missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
-                        missing_indices = np.arange(missing_start, missing_start + n_missing)
-                    else:
-                        missing_indices = np.random.choice(indices, n_missing, replace=False)
-                    train_X_m_sample = sample.copy()
-                    train_X_m_sample[missing_indices]=0
-                    train_mask_sample[missing_indices]=0
-                    yield train_X_m_sample,train_mask_sample,train_X[i],train_Y[i]
+                yield train_X[i],train_Y[i]
 
 
+    def map_function_ecg(train_X,train_Y):
+        sample = train_X
+        train_mask_sample = np.ones(sample.shape)
+        if cont:
+            missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+            missing_indices = np.arange(missing_start, missing_start + n_missing)
+        else:
+            missing_indices = np.random.choice(indices, n_missing, replace=False)
+        train_X_m_sample = sample.copy()
+        train_X_m_sample[missing_indices] = 0
+        train_mask_sample[missing_indices] = 0
+        yield train_X_m_sample, train_mask_sample, train_X, train_Y
 
-    train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32,tf.float32,tf.float32))
+    if not fixed:
+        if data_type=='ecg':
+            train_ds =tf.data.Dataset.from_generator(generator, output_types=(tf.float32,tf.float32))
+            train_ds = train_ds.map(map_function_ecg,num_parallel_calls=multiprocessing.cpu_count())
+    else:
+        train_ds = tf.data.Dataset.from_generator(generator,
+                                                  output_types=(tf.float32, tf.float32, tf.float32, tf.float32))
     train_ds = train_ds.shuffle(shuffle_buffer_size)
     train_ds = train_ds.prefetch(buffer_size=fetch_buffer_size)
     train_ds = train_ds.batch(batch_size)
