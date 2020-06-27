@@ -305,17 +305,15 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
 
     def map_function_ecg(train_X,train_Y):
         sample = train_X
-        train_mask_sample = tf.ones_like(sample)
         if cont:
             missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
             missing_indices = np.arange(missing_start, missing_start + n_missing)
         else:
             missing_indices = np.random.choice(indices, n_missing, replace=False)
-        mask = np.ones(sample.shape,dtype=bool)
+        mask = np.ones((192,1),dtype=bool)
         mask[missing_indices] = 0
-        train_X_m_sample = sample.copy()
-        train_X_m_sample = tf.where(mask,train_X_m_sample,tf.zeros_like(train_X_m_sample))
-        train_mask_sample = tf.where(mask,tf.ones_like(train_X_m_sample), tf.zeros_like(train_X_m_sample))
+        train_X_m_sample = tf.where(mask,sample,tf.zeros_like(sample))
+        train_mask_sample = tf.where(mask,tf.ones_like(sample), tf.zeros_like(sample))
         return train_X_m_sample, train_mask_sample, train_X, train_Y
 
     if not fixed:
