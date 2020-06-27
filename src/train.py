@@ -548,7 +548,7 @@ def train_imp(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if opt.cont:
-            if not opt.fixed:
+            if opt.fixed:
                 str_imp = 'imp-cont-fixed_'
             else:
                 str_imp = 'imp-cont_'
