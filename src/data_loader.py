@@ -143,30 +143,33 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
 
     #defining the generator to generate dataset
     def generator():
+        if prob!=0 and not fixed:
+            train_X_m = np.zeros(train_X.shape)
+            train_mask = np.ones(train_X.shape)
+            for i, data in enumerate(train_X):
+                if cont:
+                    missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+                    missing_indices = np.arange(missing_start, missing_start + n_missing)
+                else:
+                    missing_indices = np.random.choice(indices, n_missing, replace=False)
+                train_X_m[i] = data
+                train_X_m[i][missing_indices] = 0
+                train_mask[i][missing_indices] = 0
+
+            if imp_model:
+                G = load_model(imp_model)
+                train_X_m_mask = np.concatenate([train_X_m, train_mask], axis=-1)
+                x_pred = G.predict(train_X_m_mask, batch_size=batch_size, verbose=1)
+                train_X_var = train_X_m * train_mask + x_pred * (1 - train_mask)
+
+            else:
+                train_X_var = train_X_m
+
         for i in range(len(train_X)):
             if prob==0 or fixed:
                 yield train_X[i],train_Y[i]
             else:
-                if data_type == 'ecg':
-                    sample = train_X[i]
-                    train_mask_sample = np.ones(sample.shape)
-                    if cont:
-                        missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
-                        missing_indices = np.arange(missing_start, missing_start + n_missing)
-                    else:
-                        missing_indices = np.random.choice(indices, n_missing, replace=False)
-                    train_X_m_sample = sample.copy()
-                    train_X_m_sample[missing_indices] = 0
-                    train_mask_sample[missing_indices] = 0
-                    if imp_model:
-                        G = load_model(imp_model)
-                        train_X_m_mask_sample = np.concatenate([train_X_m_sample, train_mask_sample], axis=-1)
-                        x_pred = G(np.expand_dims(train_X_m_mask_sample,axis=0), training=False).numpy()
-                        print('hello')
-                        yield x_pred.squeeze(axis=0), train_Y[i]
-
-                    else:
-                        yield train_X_m_sample,train_Y[i]
+                yield train_X_var[i], train_Y[i]
 
 
     train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32))
