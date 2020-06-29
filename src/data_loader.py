@@ -93,7 +93,7 @@ def read_test_data(data_type):
         return test_X,test_Y
 
 def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2,resample=False, sr_model= None,
-                     prob=0,seed=1,cont=False,imp_model=None):
+                     prob=0,seed=1,cont=False,fixed=False,imp_model=None):
     '''
     Returns the train dataset for classification model
     :param data_type: str
@@ -118,32 +118,55 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
             np.random.seed(seed)
             indices = np.arange(192)
             n_missing = int(prob * 192)
-            train_X_m = np.zeros(train_X.shape)
-            train_mask = np.ones(train_X.shape)
-            for i, data in enumerate(train_X):
-                if cont:
-                    missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
-                    missing_indices = np.arange(missing_start, missing_start + n_missing)
+            if fixed:
+                train_X_m = np.zeros(train_X.shape)
+                train_mask = np.ones(train_X.shape)
+                for i, data in enumerate(train_X):
+                    if cont:
+                        missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+                        missing_indices = np.arange(missing_start, missing_start + n_missing)
+                    else:
+                        missing_indices = np.random.choice(indices, n_missing, replace=False)
+                    train_X_m[i] = data
+                    train_X_m[i][missing_indices] = 0
+                    train_mask[i][missing_indices] = 0
+
+                if imp_model:
+                    G = load_model(imp_model)
+                    train_X_m_mask = np.concatenate([train_X_m,train_mask],axis=-1)
+                    x_pred = G.predict(train_X_m_mask,batch_size=batch_size,verbose=1)
+                    train_X = train_X_m*train_mask + x_pred*(1-train_mask)
+
                 else:
-                    missing_indices = np.random.choice(indices, n_missing, replace=False)
-                train_X_m[i] = data
-                train_X_m[i][missing_indices] = 0
-                train_mask[i][missing_indices] = 0
-
-            if imp_model:
-                G = load_model(imp_model)
-                train_X_m_mask = np.concatenate([train_X_m,train_mask],axis=-1)
-                x_pred = G.predict(train_X_m_mask,batch_size=batch_size,verbose=1)
-                train_X = train_X_m*train_mask + x_pred*(1-train_mask)
-
-            else:
-                train_X = train_X_m
+                    train_X = train_X_m
 
 
     #defining the generator to generate dataset
     def generator():
         for i in range(len(train_X)):
-            yield train_X[i],train_Y[i]
+            if prob==0 or fixed:
+                yield train_X[i],train_Y[i]
+            else:
+                if data_type == 'ecg':
+                    sample = train_X[i]
+                    train_mask_sample = np.ones(sample.shape)
+                    if cont:
+                        missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+                        missing_indices = np.arange(missing_start, missing_start + n_missing)
+                    else:
+                        missing_indices = np.random.choice(indices, n_missing, replace=False)
+                    train_X_m_sample = sample.copy()
+                    train_X_m_sample[missing_indices] = 0
+                    train_mask_sample[missing_indices] = 0
+                    if imp_model:
+                        G = load_model(imp_model)
+                        train_X_m_mask_sample = np.concatenate([train_X_m_sample, train_mask_sample], axis=-1)
+                        x_pred = G(np.expand_dims(train_X_m_mask_sample,axis=0), training=False).numpy()
+                        yield x_pred.squeeze(axis=0), train_Y[i]
+
+                    else:
+                        yield train_X_m_sample,train_Y[i]
+
 
     train_ds = tf.data.Dataset.from_generator(generator, output_types=(tf.float32, tf.float32))
     train_ds = train_ds.shuffle(shuffle_buffer_size)
