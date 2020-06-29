@@ -162,6 +162,7 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
                         G = load_model(imp_model)
                         train_X_m_mask_sample = np.concatenate([train_X_m_sample, train_mask_sample], axis=-1)
                         x_pred = G(np.expand_dims(train_X_m_mask_sample,axis=0), training=False).numpy()
+                        print('hello')
                         yield x_pred.squeeze(axis=0), train_Y[i]
 
                     else:
