@@ -31,7 +31,7 @@ def evaluate_clf(opt):
                 test_mask[i][missing_indices] = 0
 
             if opt.use_imp_clf:
-                G = load_model(opt.imp_model)
+                G = load_model(opt.model_path)
                 test_X_m_mask = np.concatenate([test_X_m, test_mask], axis=-1)
                 x_pred = G.predict(test_X_m_mask, batch_size=opt.batch_size, verbose=1)
                 test_X = test_X_m * test_mask + x_pred * (1 - test_mask)
