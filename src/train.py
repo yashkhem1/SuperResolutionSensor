@@ -162,23 +162,28 @@ def train_clf(opt):
                 use_perception = '0'
                 masked_loss = '0'
 
+            if opt.fixed:
+                clf_string = 'clf-fixed'
+            else:
+                clf_string = 'clf'
+
         if f1_test > prev_best:
             if opt.prob==0:
-                C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
+                C.save(os.path.join(opt.save_dir, 'best_'+clf_string+'_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
                                     + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
                                     '_weighted_' + str(opt.weighted) + '.pt'))
             else:
-                C.save(os.path.join(opt.save_dir, 'best_clf_' + str(opt.data_type) + '_prob_' + str(opt.prob)
+                C.save(os.path.join(opt.save_dir, 'best_'+clf_string+'_' + str(opt.data_type) + '_prob_' + str(opt.prob)
                                  + '_imp_' + imp_string + '_perception_' + use_perception + '_maskedloss_'+masked_loss+
                                 '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.pt'))
             print('Saving Best generator with best accuracy:', accuracy_test, 'and F1 score:', f1_test)
             prev_best = f1_test
         if opt.prob==0:
-            C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
+            C.save(os.path.join(opt.save_dir, 'last_'+clf_string+'_'+ str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
                                     + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
                                     '_weighted_' + str(opt.weighted) + '.pt'))
         else:
-            C.save(os.path.join(opt.save_dir, 'last_clf_' + str(opt.data_type) + '_prob_' + str(opt.prob)
+            C.save(os.path.join(opt.save_dir, 'last_'+clf_string+'_' + str(opt.data_type) + '_prob_' + str(opt.prob)
                                 + '_imp_' + imp_string + '_perception_' + use_perception + '_maskedloss_' + masked_loss +
                                 '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.pt'))
 
