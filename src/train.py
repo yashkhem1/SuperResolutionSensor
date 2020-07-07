@@ -77,10 +77,10 @@ def train_clf(opt):
         imp_model = opt.model_path
 
     train_ds = train_cf_dataset(opt.data_type,opt.sampling_ratio,opt.train_batch_size,opt.shuffle_buffer_size,opt.fetch_buffer_size,
-                                opt.resample,sr_model,opt.prob,opt.seed,opt.cont,opt.fixed,imp_model)
+                                opt.resample,sr_model,opt.interp, opt.inter_type, opt.prob,opt.seed,opt.cont,opt.fixed,imp_model)
 
-    test_ds = test_cf_dataset(opt.data_type,opt.sampling_ratio,opt.test_batch_size,opt.fetch_buffer_size,sr_model,opt.prob,
-                              opt.seed, opt.cont, imp_model)
+    test_ds = test_cf_dataset(opt.data_type,opt.sampling_ratio,opt.test_batch_size,opt.fetch_buffer_size,sr_model,opt.interp,
+                              opt.interp_type,opt.prob, opt.seed, opt.cont, imp_model)
     prev_best = -1*np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -147,9 +147,15 @@ def train_clf(opt):
             model_defs = opt.model_path.split('/')[-1].split('_')
             sr_string = model_defs[1]
             use_perception = model_defs[4][:-3]
+
+        elif opt.interp:
+            sr_string = opt.interp_type
+            use_perception = '0'
+
         else:
             sr_string = '0'
             use_perception='0'
+
 
         if opt.prob!=0:
             if opt.use_imp_clf:

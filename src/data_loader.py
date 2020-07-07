@@ -11,6 +11,7 @@ from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
 from sklearn.utils import class_weight
 from tensorflow.keras.models import load_model
 import multiprocessing
+from scipy import interpolate
 
 import tensorflow as tf
 
@@ -93,7 +94,7 @@ def read_test_data(data_type):
         return test_X,test_Y
 
 def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2,resample=False, sr_model= None,
-                     prob=0,seed=1,cont=False,fixed=False,imp_model=None):
+                     interp=0,interp_type='linear',prob=0,seed=1,cont=False,fixed=False,imp_model=None):
     '''
     Returns the train dataset for classification model
     :param data_type: str
@@ -113,6 +114,9 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
                 G = load_model(sr_model)
                 train_X = G.predict(train_X,batch_size=batch_size,verbose=1)
                 print(len(train_X))
+            if interp:
+                interp_indices = np.arange(0,192,sampling_ratio)
+                train_X = interpolate.interp1d(interp_indices,train_X,axis=1,kind=interp_type)
 
         if  prob!=0:
             np.random.seed(seed)
@@ -178,8 +182,8 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
     train_ds = train_ds.batch(batch_size)
     return train_ds
 
-def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_model = None, prob=0, seed=1, cont=False,
-                    imp_model = None):
+def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_model = None, interp=0, interp_type='linear',
+                    prob=0, seed=1, cont=False,imp_model = None):
     '''
     Returns the test dataloader for classification model
     :param data_type: str
@@ -197,6 +201,10 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_
                 G = load_model(sr_model)
                 test_X = G.predict(test_X,batch_size=batch_size,verbose=1)
                 print(len(test_X))
+
+            if interp:
+                interp_indices = np.arange(0, 192, sampling_ratio)
+                test_X = interpolate.interp1d(interp_indices, test_X, axis=1, kind=interp_type)
 
         if prob != 0:
             np.random.seed(seed)

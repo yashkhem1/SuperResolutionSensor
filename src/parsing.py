@@ -45,6 +45,8 @@ class Options:
         # ===============================================================
         self.parser.add_argument('--use_sr_clf', type=int, default=0, help='Use super-resolution data for classification')
         self.parser.add_argument('--sampling_ratio', type=int, default=1, help='Downsampling factor')
+        self.parser.add_argument('--interp', type=int, default=0, help='Use interpolation for upsampling' )
+        self.parser.add_argument('--interp_type', type=str, default='linear', help='Default method of interpolation')
 
         # ===============================================================
         #                 Missing Data Imputation Options

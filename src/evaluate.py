@@ -3,6 +3,7 @@ from src.data_loader import *
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from sklearn.metrics import mean_squared_error, accuracy_score, f1_score, confusion_matrix
+from scipy import interpolate
 
 def evaluate_clf(opt):
     C = load_model(opt.classifier_path)
@@ -13,6 +14,9 @@ def evaluate_clf(opt):
             if opt.use_sr_clf:
                 G = load_model(opt.model_path)
                 test_X = G.predict(test_X,batch_size=opt.test_batch_size,verbose=1)
+            if opt.interp:
+                interp_indices = np.arange(0, 192, opt.sampling_ratio)
+                test_X = interpolate.interp1d(interp_indices, test_X, axis=1, kind=opt.interp_type)
 
         if opt.prob != 0:
             np.random.seed(opt.seed)
@@ -49,11 +53,16 @@ def evaluate_clf(opt):
     print('Confusion Matrix: ', cf_matrix)
 
 def evaluate_ecg_sr(opt):
-    G = load_model(opt.model_path)
+    if not opt.interp:
+        G = load_model(opt.model_path)
     C = load_model(opt.classifier_path)
     test_X,test_Y = read_test_data(opt.data_type)
     x_true = test_X
-    x_pred = G.predict(x_true[:, ::opt.sampling_ratio, :],batch_size=opt.test_batch_size,verbose=1)
+    if opt.interp:
+        interp_indices = np.arange(0,192,opt.sampling_ratio)
+        x_pred = interpolate.interp1d(interp_indices,x_true,axis=1,kind=opt.interp_type)
+    else:
+        x_pred = G.predict(x_true[:, ::opt.sampling_ratio, :],batch_size=opt.test_batch_size,verbose=1)
     y_true = np.argmax(test_Y,axis=1)
     y_pred_sr = np.argmax(C.predict(x_pred,batch_size=opt.test_batch_size,verbose=1),axis=1)
     y_pred_hr= np.argmax(C.predict(x_true,batch_size=opt.test_batch_size,verbose=1),axis=1)
