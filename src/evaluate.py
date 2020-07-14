@@ -16,7 +16,9 @@ def evaluate_clf(opt):
                 test_X = G.predict(test_X,batch_size=opt.test_batch_size,verbose=1)
             if opt.interp:
                 interp_indices = np.arange(0, 192, opt.sampling_ratio)
-                test_X = interpolate.interp1d(interp_indices, test_X, axis=1, kind=opt.interp_type)
+                inter_func = interpolate.interp1d(interp_indices, test_X, axis=1, kind=opt.interp_type, fill_value='extrapolate')
+                test_X = inter_func(np.arange(0,192))
+
 
         if opt.prob != 0:
             np.random.seed(opt.seed)
@@ -60,7 +62,8 @@ def evaluate_ecg_sr(opt):
     x_true = test_X
     if opt.interp:
         interp_indices = np.arange(0,192,opt.sampling_ratio)
-        x_pred = interpolate.interp1d(interp_indices,x_true[:, ::opt.sampling_ratio, :],axis=1,kind=opt.interp_type)
+        inter_func = interpolate.interp1d(interp_indices,x_true[:, ::opt.sampling_ratio, :],axis=1,kind=opt.interp_type, fill_value='extrapolate')
+        x_pred = inter_func(np.arange(0,192))
     else:
         x_pred = G.predict(x_true[:, ::opt.sampling_ratio, :],batch_size=opt.test_batch_size,verbose=1)
     y_true = np.argmax(test_Y,axis=1)

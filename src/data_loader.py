@@ -116,7 +116,8 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
                 print(len(train_X))
             if interp:
                 interp_indices = np.arange(0,192,sampling_ratio)
-                train_X = interpolate.interp1d(interp_indices,train_X,axis=1,kind=interp_type)
+                inter_func = interpolate.interp1d(interp_indices,train_X,axis=1,kind=interp_type,fill_value='extrapolate')
+                train_X = inter_func(np.arange(0,192))
 
         if  prob!=0:
             np.random.seed(seed)
@@ -204,7 +205,8 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_
 
             if interp:
                 interp_indices = np.arange(0, 192, sampling_ratio)
-                test_X = interpolate.interp1d(interp_indices, test_X, axis=1, kind=interp_type)
+                inter_func = interpolate.interp1d(interp_indices, test_X, axis=1, kind=interp_type,fill_value='extrapolate')
+                test_X = inter_func(np.arange(0,192))
 
         if prob != 0:
             np.random.seed(seed)
