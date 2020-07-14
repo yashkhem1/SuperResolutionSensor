@@ -156,6 +156,7 @@ def train_clf(opt):
             sr_string = '0'
             use_perception='0'
 
+        clf_string = 'clf'
 
         if opt.prob!=0:
             if opt.use_imp_clf:
@@ -170,8 +171,7 @@ def train_clf(opt):
 
             if opt.fixed:
                 clf_string = 'clf-fixed'
-            else:
-                clf_string = 'clf'
+
 
         if f1_test > prev_best:
             if opt.prob==0:
