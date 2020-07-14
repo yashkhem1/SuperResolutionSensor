@@ -60,7 +60,7 @@ def evaluate_ecg_sr(opt):
     x_true = test_X
     if opt.interp:
         interp_indices = np.arange(0,192,opt.sampling_ratio)
-        x_pred = interpolate.interp1d(interp_indices,x_true,axis=1,kind=opt.interp_type)
+        x_pred = interpolate.interp1d(interp_indices,x_true[:, ::opt.sampling_ratio, :],axis=1,kind=opt.interp_type)
     else:
         x_pred = G.predict(x_true[:, ::opt.sampling_ratio, :],batch_size=opt.test_batch_size,verbose=1)
     y_true = np.argmax(test_Y,axis=1)
