@@ -61,7 +61,7 @@ def train_clf(opt):
     '''
     if opt.data_type == 'ecg':
         inp_shape = (192//opt.sampling_ratio,1)
-        if opt.use_sr_clf:
+        if opt.use_sr_clf or opt.interp:
             inp_shape = (192,1)
         nclasses =  5
         C = clf_model_func('ecg')(inp_shape,nclasses)
