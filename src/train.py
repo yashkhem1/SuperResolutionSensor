@@ -77,7 +77,7 @@ def train_clf(opt):
         imp_model = opt.model_path
 
     train_ds = train_cf_dataset(opt.data_type,opt.sampling_ratio,opt.train_batch_size,opt.shuffle_buffer_size,opt.fetch_buffer_size,
-                                opt.resample,sr_model,opt.interp, opt.inter_type, opt.prob,opt.seed,opt.cont,opt.fixed,imp_model)
+                                opt.resample,sr_model,opt.interp, opt.interp_type, opt.prob,opt.seed,opt.cont,opt.fixed,imp_model)
 
     test_ds = test_cf_dataset(opt.data_type,opt.sampling_ratio,opt.test_batch_size,opt.fetch_buffer_size,sr_model,opt.interp,
                               opt.interp_type,opt.prob, opt.seed, opt.cont, imp_model)
