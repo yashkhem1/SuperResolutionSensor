@@ -242,7 +242,8 @@ def train_sr(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        for step , (lr,hr,y) in enumerate(train_ds):
+        t= tqdm(enumerate(train_ds))
+        for step , (lr,hr,y) in t:
             if lr.shape[0]<opt.train_batch_size:
                 break
             step_time = time.time()
@@ -264,7 +265,7 @@ def train_sr(opt):
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}".format(epoch,
+            t.set_description("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}".format(epoch,
                     opt.epochs,step, n_steps_train,time.time() - step_time, loss_mse,loss_pr))
 
         x_true_train = np.array(x_true_train)
@@ -284,7 +285,8 @@ def train_sr(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        for step,(lr,hr,y) in enumerate(test_ds):
+        t = tqdm(enumerate(test_ds))
+        for step,(lr,hr,y) in t:
             step_time = time.time()
             hr_f = G(lr,training=False)
             x_true_test += list(hr.numpy())
@@ -293,7 +295,7 @@ def train_sr(opt):
             y_pred = np.argmax(C(hr_f, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
             y_pred_test = np.append(y_pred_test, y_pred)
-            print("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
+            t.set_description("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
                 epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
 
         x_true_test = np.array(x_true_test)
@@ -349,7 +351,8 @@ def train_sr_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        for step , (lr,hr,y) in enumerate(train_ds):
+        t = tqdm(enumerate(train_ds))
+        for step , (lr,hr,y) in t:
             if lr.shape[0]<opt.train_batch_size:
                 break
             step_time = time.time()
@@ -412,7 +415,7 @@ def train_sr_gan(opt):
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}, adv:{:.6f}, d_fake_loss:{:.6f},"
+            t.set_description("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}, adv:{:.6f}, d_fake_loss:{:.6f},"
                   " d_real_loss:{:.6f},  gradient_penalty:{:.6f}".format(epoch,
                     opt.epochs,step, n_steps_train,time.time() - step_time, loss_mse,loss_pr,loss_gen,f_loss,r_loss,grad_p))
 
@@ -433,7 +436,8 @@ def train_sr_gan(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        for step,(lr,hr,y) in enumerate(test_ds):
+        t = tqdm(enumerate(test_ds))
+        for step,(lr,hr,y) in t:
             step_time = time.time()
             hr_f = G(lr,training=False)
             x_true_test += list(hr.numpy())
@@ -442,7 +446,7 @@ def train_sr_gan(opt):
             y_pred = np.argmax(C(hr_f, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
             y_pred_test = np.append(y_pred_test, y_pred)
-            print("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
+            t.set_description("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
                 epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
 
         x_true_test = np.array(x_true_test)
@@ -498,7 +502,8 @@ def train_imp(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        for step , (x_m,mask,x,y) in enumerate(train_ds):
+        t = tqdm(enumerate(train_ds))
+        for step , (x_m,mask,x,y) in t:
             if x.shape[0]<opt.train_batch_size:
                 break
             step_time = time.time()
@@ -526,7 +531,7 @@ def train_imp(opt):
             y_pred = np.argmax(C(x_pred_orig,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}".format(epoch,
+            t.set_description("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}".format(epoch,
                     opt.epochs,step, n_steps_train,time.time() - step_time, loss_mse,loss_pr))
 
         x_true_train = np.array(x_true_train)
@@ -546,7 +551,8 @@ def train_imp(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        for step,(x_m,mask,x,y) in enumerate(test_ds):
+        t = tqdm(enumerate(test_ds))
+        for step,(x_m,mask,x,y) in t:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
             x_pred = G(x_m_mask,training=False)
@@ -560,7 +566,7 @@ def train_imp(opt):
             y_pred = np.argmax(C(x_pred_orig, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
             y_pred_test = np.append(y_pred_test, y_pred)
-            print("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
+            t.set_description("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
                 epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
 
         x_true_test = np.array(x_true_test)
@@ -626,7 +632,8 @@ def train_imp_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        for step , (x_m,mask,x,y) in enumerate(train_ds):
+        t = tqdm(enumerate(train_ds))
+        for step , (x_m,mask,x,y) in t:
             if x.shape[0]<opt.train_batch_size:
                 break
             step_time = time.time()
@@ -700,7 +707,7 @@ def train_imp_gan(opt):
             y_pred = np.argmax(C(x_pred_orig,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            print(
+            t.set_description(
                 "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}, adv:{:.6f}, d_fake_loss:{:.6f},"
                 " d_real_loss:{:.6f},  gradient_penalty:{:.6f}".format(epoch,
                                                                        opt.epochs, step, n_steps_train,
@@ -724,7 +731,8 @@ def train_imp_gan(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        for step,(x_m,mask,x,y) in enumerate(test_ds):
+        t = tqdm(enumerate(test_ds))
+        for step,(x_m,mask,x,y) in t:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
             x_pred = G(x_m_mask,training=False)
@@ -738,7 +746,7 @@ def train_imp_gan(opt):
             y_pred = np.argmax(C(x_pred_orig, training=False), axis=1)
             y_true_test = np.append(y_true_test, y_true)
             y_pred_test = np.append(y_pred_test, y_pred)
-            print("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
+            t.set_description("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
                 epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
 
         x_true_test = np.array(x_true_test)
