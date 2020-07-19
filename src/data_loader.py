@@ -107,6 +107,7 @@ def read_train_data(data_type,rs=False):
 
         return train_X, train_Y
 
+    print("Loaded Train Data")
 
 def read_test_data(data_type):
     '''
@@ -143,7 +144,7 @@ def read_test_data(data_type):
 
         return test_X, test_Y
 
-
+    print("Loaded Test Data")
 
 def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2,resample=False, sr_model= None,
                      interp=0,interp_type='linear',prob=0,seed=1,cont=False,fixed=False,imp_model=None):
