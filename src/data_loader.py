@@ -32,6 +32,20 @@ def get_class_weights(data_type):
         weight_list = weight_list/weight_list.sum()
         return weight_list
 
+    if data_type == 'shl':
+        train_labels = np.load('data/shl_train_y.npy')
+        w0 = len(train_labels) / len(train_labels[train_labels[:,0] == 1])
+        w1 = len(train_labels) / len(train_labels[train_labels[:, 0] == 2])
+        w2 = len(train_labels) / len(train_labels[train_labels[:, 0] == 3])
+        w3 = len(train_labels) / len(train_labels[train_labels[:, 0] == 4])
+        w4 = len(train_labels) / len(train_labels[train_labels[:, 0] == 5])
+        w5 = len(train_labels) / len(train_labels[train_labels[:, 0] == 6])
+        w6 = len(train_labels) / len(train_labels[train_labels[:, 0] == 7])
+        w7 = len(train_labels) / len(train_labels[train_labels[:, 0] == 8])
+        weight_list = np.array([w0, w1, w2, w3, w4, w5, w6, w7])
+        weight_list = weight_list / weight_list.sum()
+        return weight_list
+
 
 
 def read_train_data(data_type,rs=False):
@@ -40,6 +54,8 @@ def read_train_data(data_type,rs=False):
     :param data_type: str
     :return: (trainX, trainY)
     '''
+
+    #------------------------------------ECG-------------------------------------------------------------#
     if data_type == 'ecg':
         # read data from csv files
         train_data = pd.read_csv('data/mitbih_train.csv',header=None)
@@ -71,6 +87,27 @@ def read_train_data(data_type,rs=False):
 
         return train_X,train_Y
 
+    # ------------------------------------SHL-------------------------------------------------------------#
+    if data_type == 'shl':
+        # read data from numpy file
+        train_X = np.load('data/shl_train_x.npy')
+        train_Y = np.load('data/shl_train_y.npy')
+
+        if rs:
+            print("No resampling for SHL dataset")
+            exit(0)
+
+        indices = np.random.shuffle(np.arange(len(train_X)))
+        train_X = train_X[indices]
+        train_Y = train_Y[indices]
+
+        train_X = train_X.reshape(-1,6,512,1)
+        train_Y = train_Y.reshape(-1) - 1
+        train_Y = tf.keras.utils.to_categorical(train_Y, num_classes=8)
+
+        return train_X, train_Y
+
+
 def read_test_data(data_type):
     '''
     Read the test data for the corresponding data type
@@ -78,6 +115,7 @@ def read_test_data(data_type):
     :return: (testX,testY)
     '''
 
+    # ------------------------------------ECG-------------------------------------------------------------#
     if data_type=='ecg':
         # read data from csv files
         test_data = pd.read_csv('data/mitbih_test.csv',header=None)
@@ -93,6 +131,20 @@ def read_test_data(data_type):
 
         return test_X,test_Y
 
+    # ------------------------------------SHL-------------------------------------------------------------#
+    elif data_type == 'shl':
+        # read data from numpy file
+        test_X = np.load('data/shl_test_x.npy')
+        test_Y = np.load('data/shl_test_y.npy')
+
+        test_X = test_X.reshape(-1, 6, 512, 1)
+        test_Y = test_Y.reshape(-1) - 1
+        test_Y = tf.keras.utils.to_categorical(test_Y, num_classes=8)
+
+        return test_X, test_Y
+
+
+
 def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=1000,fetch_buffer_size=2,resample=False, sr_model= None,
                      interp=0,interp_type='linear',prob=0,seed=1,cont=False,fixed=False,imp_model=None):
     '''
@@ -107,6 +159,7 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
     '''
     train_X,train_Y = read_train_data(data_type,resample)
     #downsample the high resolution data
+    # ------------------------------------ECG-------------------------------------------------------------#
     if data_type == 'ecg':
         if sampling_ratio!=1:
             train_X = train_X[:, ::sampling_ratio, :]
@@ -145,30 +198,97 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
                 else:
                     train_X = train_X_m
 
+    # ------------------------------------SHL-------------------------------------------------------------#
+    elif data_type == 'shl':
+        if sampling_ratio!=1:
+            train_X = train_X[:, :, ::sampling_ratio, :]
+            if sr_model:
+                G = load_model(sr_model)
+                train_X = G.predict(train_X,batch_size=batch_size,verbose=1)
+                print(len(train_X))
+            if interp:
+                interp_indices = np.arange(0,512,sampling_ratio)
+                inter_func = interpolate.interp1d(interp_indices,train_X,axis=2,kind=interp_type,fill_value='extrapolate')
+                train_X = inter_func(np.arange(0,512))
+
+        if  prob!=0:
+            np.random.seed(seed)
+            indices = np.arange(512)
+            n_missing = int(prob * 512)
+            if fixed:
+                train_X_m = np.zeros(train_X.shape)
+                train_mask = np.ones(train_X.shape)
+                for i, data in enumerate(train_X):
+                    for j in range(6):
+                        if cont:
+                            missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                            missing_indices = np.arange(missing_start, missing_start + n_missing)
+                        else:
+                            missing_indices = np.random.choice(indices, n_missing, replace=False)
+                        train_X_m[i] = data
+                        train_X_m[i,j,missing_indices,:] = 0
+                        train_mask[i,j,missing_indices,:] = 0
+
+                if imp_model:
+                    G = load_model(imp_model)
+                    train_X_m_mask = np.concatenate([train_X_m,train_mask],axis=-1)
+                    x_pred = G.predict(train_X_m_mask,batch_size=batch_size,verbose=1)
+                    train_X = train_X_m*train_mask + x_pred*(1-train_mask)
+
+                else:
+                    train_X = train_X_m
+
+
 
     #defining the generator to generate dataset
     def generator():
         if prob!=0 and not fixed:
-            train_X_m = np.zeros(train_X.shape)
-            train_mask = np.ones(train_X.shape)
-            for i, data in enumerate(train_X):
-                if cont:
-                    missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
-                    missing_indices = np.arange(missing_start, missing_start + n_missing)
+            # ------------------------------------ECG-------------------------------------------------------------#
+            if data_type == 'ecg':
+                train_X_m = np.zeros(train_X.shape)
+                train_mask = np.ones(train_X.shape)
+                for i, data in enumerate(train_X):
+                    if cont:
+                        missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+                        missing_indices = np.arange(missing_start, missing_start + n_missing)
+                    else:
+                        missing_indices = np.random.choice(indices, n_missing, replace=False)
+                    train_X_m[i] = data
+                    train_X_m[i][missing_indices] = 0
+                    train_mask[i][missing_indices] = 0
+
+                if imp_model:
+                    G = load_model(imp_model)
+                    train_X_m_mask = np.concatenate([train_X_m, train_mask], axis=-1)
+                    x_pred = G.predict(train_X_m_mask, batch_size=batch_size, verbose=1)
+                    train_X_var = train_X_m * train_mask + x_pred * (1 - train_mask)
+
                 else:
-                    missing_indices = np.random.choice(indices, n_missing, replace=False)
-                train_X_m[i] = data
-                train_X_m[i][missing_indices] = 0
-                train_mask[i][missing_indices] = 0
+                    train_X_var = train_X_m
 
-            if imp_model:
-                G = load_model(imp_model)
-                train_X_m_mask = np.concatenate([train_X_m, train_mask], axis=-1)
-                x_pred = G.predict(train_X_m_mask, batch_size=batch_size, verbose=1)
-                train_X_var = train_X_m * train_mask + x_pred * (1 - train_mask)
+            # ------------------------------------SHL-------------------------------------------------------------#
+            elif data_type == 'shl':
+                train_X_m = np.zeros(train_X.shape)
+                train_mask = np.ones(train_X.shape)
+                for i, data in enumerate(train_X):
+                    for j in range(6):
+                        if cont:
+                            missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                            missing_indices = np.arange(missing_start, missing_start + n_missing)
+                        else:
+                            missing_indices = np.random.choice(indices, n_missing, replace=False)
+                        train_X_m[i] = data
+                        train_X_m[i,j,missing_indices,:] = 0
+                        train_mask[i,j,missing_indices,:] = 0
 
-            else:
-                train_X_var = train_X_m
+                if imp_model:
+                    G = load_model(imp_model)
+                    train_X_m_mask = np.concatenate([train_X_m, train_mask], axis=-1)
+                    x_pred = G.predict(train_X_m_mask, batch_size=batch_size, verbose=1)
+                    train_X_var = train_X_m * train_mask + x_pred * (1 - train_mask)
+
+                else:
+                    train_X_var = train_X_m
 
         for i in range(len(train_X)):
             if prob==0 or fixed:
@@ -195,6 +315,7 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_
     '''
     test_X, test_Y = read_test_data(data_type)
     #downsample the high resolution data
+    # ------------------------------------ECG-------------------------------------------------------------#
     if data_type == 'ecg':
         if sampling_ratio!=1:
             test_X = test_X[:, ::sampling_ratio, :]
@@ -223,6 +344,46 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_
                 test_X_m[i] = data
                 test_X_m[i][missing_indices] = 0
                 test_mask[i][missing_indices] = 0
+
+            if imp_model:
+                G = load_model(imp_model)
+                test_X_m_mask = np.concatenate([test_X_m, test_mask], axis=-1)
+                x_pred = G.predict(test_X_m_mask, batch_size=batch_size, verbose=1)
+                test_X = test_X_m * test_mask + x_pred * (1 - test_mask)
+
+            else:
+                test_X = test_X_m
+
+    # ------------------------------------SHL-------------------------------------------------------------#
+    elif data_type == 'shl':
+        if sampling_ratio!=1:
+            test_X = test_X[:, :, ::sampling_ratio, :]
+            if sr_model:
+                G = load_model(sr_model)
+                test_X = G.predict(test_X,batch_size=batch_size,verbose=1)
+                print(len(test_X))
+
+            if interp:
+                interp_indices = np.arange(0, 512, sampling_ratio)
+                inter_func = interpolate.interp1d(interp_indices, test_X, axis=2, kind=interp_type,fill_value='extrapolate')
+                test_X = inter_func(np.arange(0,512))
+
+        if prob != 0:
+            np.random.seed(seed)
+            indices = np.arange(512)
+            n_missing = int(prob * 512)
+            test_X_m = np.zeros(test_X.shape)
+            test_mask = np.ones(test_X.shape)
+            for i, data in enumerate(test_X):
+                for j in range(6):
+                    if cont:
+                        missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                        missing_indices = np.arange(missing_start, missing_start + n_missing)
+                    else:
+                        missing_indices = np.random.choice(indices, n_missing, replace=False)
+                    test_X_m[i] = data
+                    test_X_m[i,j,missing_indices,:] = 0
+                    test_mask[i,j,missing_indices,:] = 0
 
             if imp_model:
                 G = load_model(imp_model)

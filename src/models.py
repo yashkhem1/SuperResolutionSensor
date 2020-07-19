@@ -11,7 +11,7 @@ from sklearn.utils import class_weight
 
 import tensorflow as tf
 import tensorflow.keras
-from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, Flatten, concatenate, UpSampling1D
+from tensorflow.keras.layers import Dense, Conv1D, Conv2D, MaxPool1D, Flatten, concatenate, UpSampling1D, UpSampling2D
 from tensorflow.keras.layers import Input, BatchNormalization, Activation, Dropout, Add, LeakyReLU, GaussianNoise,PReLU
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -130,6 +130,7 @@ def ecg_clf_model(inp_shape,nclasses):
     '''
     Classification Model for ECG Dataset
     :param inp_shape: Tuple(int)
+    :param nclasses: Number of classes for classification
     :return: Keras Model
     '''
     inp = Input(shape=inp_shape)
@@ -163,6 +164,43 @@ def ecg_clf_model(inp_shape,nclasses):
     clf = Model(inputs=inp, outputs=n, name='Classifier')
     return clf
 
+def shl_clf_model(inp_shape,nclasses):
+    '''
+    Classification Model for SHL Dataset
+    :param inp_shape: Tuple(int)
+    :param nclasses: Number of classes for classification
+    :return: Keras Model
+    '''
+    inp = Input(shape=inp_shape)
+    outfilters = [16, 32, 64]
+    filters = 16
+    input_length = inp_shape[1]
+    n = Conv2D(filters, (1.3), (1,1), padding='same', kernel_initializer='he_normal')(inp)
+    n = PReLU()(n)
+    n = Conv2D(filters, (1.3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+    n = BatchNormalization()(n)
+    n = PReLU()(n)
+    input_length /= 2
+
+    for i in range(len(outfilters)):
+        n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+        if input_length % 2 == 0:
+            n = Conv2D(outfilters[i], (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+            input_length /= 2
+        else:
+            n = Conv2D(outfilters[i], (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+
+    n = Flatten()(n)
+    n = Dense(256)(n)
+    n = PReLU()(n)
+    n = Dense(nclasses)(n)
+
+    clf = Model(inputs=inp, outputs=n, name='Classifier')
+    return clf
 
 def sr_model_func(data_type):
     '''
@@ -200,6 +238,9 @@ def clf_model_func(data_type):
     '''
     if data_type=='ecg':
         return ecg_clf_model
+
+    elif data_type=='shl':
+        return shl_clf_model
 
 
 

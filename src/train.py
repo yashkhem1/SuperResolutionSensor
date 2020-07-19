@@ -66,6 +66,13 @@ def train_clf(opt):
         nclasses =  5
         C = clf_model_func('ecg')(inp_shape,nclasses)
 
+    elif opt.data_type == 'shl':
+        inp_shape = (6,512//opt.sampling_ratio,1)
+        if opt.use_sr_clf or opt.interp:
+            inp_shape = (6,512,1)
+        nclasses = 8
+        C = clf_model_func('shl')(inp_shape,nclasses)
+
     print(C.summary())
     lr_v = tf.Variable(opt.init_lr)
     c_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)

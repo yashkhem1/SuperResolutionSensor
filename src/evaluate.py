@@ -8,6 +8,7 @@ from scipy import interpolate
 def evaluate_clf(opt):
     C = load_model(opt.classifier_path)
     test_X,test_Y = read_test_data(opt.data_type)
+    # ------------------------------------ECG-------------------------------------------------------------#
     if opt.data_type=='ecg':
         if opt.sampling_ratio != 1:
             test_X = test_X[:,::opt.sampling_ratio,:]
@@ -35,6 +36,44 @@ def evaluate_clf(opt):
                 test_X_m[i] = data
                 test_X_m[i][missing_indices] = 0
                 test_mask[i][missing_indices] = 0
+
+            if opt.use_imp_clf:
+                G = load_model(opt.model_path)
+                test_X_m_mask = np.concatenate([test_X_m, test_mask], axis=-1)
+                x_pred = G.predict(test_X_m_mask, batch_size=opt.test_batch_size, verbose=1)
+                test_X = test_X_m * test_mask + x_pred * (1 - test_mask)
+
+            else:
+                test_X = test_X_m
+
+    # ------------------------------------SHL-------------------------------------------------------------#
+    elif opt.data_type=='shl':
+        if opt.sampling_ratio != 1:
+            test_X = test_X[:,:,::opt.sampling_ratio,:]
+            if opt.use_sr_clf:
+                G = load_model(opt.model_path)
+                test_X = G.predict(test_X,batch_size=opt.test_batch_size,verbose=1)
+            if opt.interp:
+                interp_indices = np.arange(0, 512, opt.sampling_ratio)
+                inter_func = interpolate.interp1d(interp_indices, test_X, axis=2, kind=opt.interp_type, fill_value='extrapolate')
+                test_X = inter_func(np.arange(0,512))
+
+
+        if opt.prob != 0:
+            np.random.seed(opt.seed)
+            indices = np.arange(512)
+            n_missing = int(opt.prob * 512)
+            test_X_m = np.zeros(test_X.shape)
+            test_mask = np.ones(test_X.shape)
+            for i, data in enumerate(test_X):
+                if opt.cont:
+                    missing_start = np.random.randint(0, int((1 - opt.prob) * 512) + 1)
+                    missing_indices = np.arange(missing_start, missing_start + n_missing)
+                else:
+                    missing_indices = np.random.choice(indices, n_missing, replace=False)
+                test_X_m[i] = data
+                test_X_m[i,:,missing_indices,:] = 0
+                test_mask[i,:,missing_indices,:] = 0
 
             if opt.use_imp_clf:
                 G = load_model(opt.model_path)
