@@ -175,9 +175,9 @@ def shl_clf_model(inp_shape,nclasses):
     outfilters = [16, 32, 64]
     filters = 16
     input_length = inp_shape[1]
-    n = Conv2D(filters, (1.3), (1,1), padding='same', kernel_initializer='he_normal')(inp)
+    n = Conv2D(filters, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(inp)
     n = PReLU()(n)
-    n = Conv2D(filters, (1.3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+    n = Conv2D(filters, (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
     n = BatchNormalization()(n)
     n = PReLU()(n)
     input_length /= 2
