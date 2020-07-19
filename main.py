@@ -5,7 +5,10 @@ import os
 
 if __name__ == "__main__":
     opt = Options().parse()
-    opt.decay_every = opt.epochs//2
+    if opt.decay_half:
+        opt.decay_every = opt.epochs//2
+    else:
+        opt.decay_every = opt.epochs+1 #This will ensure that the learning rate does not change
     if opt.save_dir:
         os.makedirs(opt.save_dir,exist_ok=True)
 
