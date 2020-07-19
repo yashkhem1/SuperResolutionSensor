@@ -21,6 +21,8 @@ from tensorflow.keras.models import load_model
 from src.models import *
 from src.data_loader import *
 
+from tqdm import tqdm, trange
+
 
 def gradient_penalty(f, real, fake):
     '''
@@ -100,7 +102,8 @@ def train_clf(opt):
     for epoch in range(opt.epochs):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        for step, (X, y_true) in enumerate(train_ds):
+        t = tqdm(enumerate(train_ds))
+        for step, (X, y_true) in t:
             if X.shape[0] < opt.train_batch_size:
                 break
             step_time = time.time()
@@ -120,7 +123,7 @@ def train_clf(opt):
             y_true_train = np.append(y_true_train,np.argmax(y_true,axis=1))
             y_pred_train = np.append(y_pred_train,np.argmax(y_pred,axis=1))
 
-            print(
+            t.set_description(
                 "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, cross_entropy_loss:{:.6f} ".format(
                     epoch, opt.epochs, step, n_steps_train, time.time() - step_time, loss))
 
@@ -139,12 +142,13 @@ def train_clf(opt):
 
         y_true_test = np.array([],dtype='int32')
         y_pred_test = np.array([],dtype='int32')
+        t = tqdm(enumerate(test_ds))
         for step, (X, y_true) in enumerate(test_ds):
             step_time = time.time()
             y_pred = C(X, training=False)
             y_true_test = np.append(y_true_test,np.argmax(y_true,axis=1))
             y_pred_test = np.append(y_pred_test,np.argmax(y_pred,axis=1))
-            print("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
+            t.set_description("Testing: Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s".format(
                 epoch, opt.epochs, step, n_steps_test, time.time() - step_time))
 
         accuracy_test = accuracy_score(y_true_test,y_pred_test)
