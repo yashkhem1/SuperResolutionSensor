@@ -81,7 +81,7 @@ def shl_sr_model(inp_shape,sampling_ratio):
     n_upsample = int(np.log2(sampling_ratio))
     for i in range(n_upsample):
         n = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
-        n = UpSampling2D(size=2)(n)
+        n = UpSampling2D(size=(1,2))(n)
         n = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = PReLU()(n)
 
@@ -156,7 +156,7 @@ def shl_imp_model(inp_shape):
     outfilters.append(filters)
 
     for i in range(1,len(outfilters)):
-        n = UpSampling2D(size=2)(n)
+        n = UpSampling2D(size=(1,2))(n)
         n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = BatchNormalization()(n)
         n = PReLU()(n)
