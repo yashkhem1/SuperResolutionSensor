@@ -32,7 +32,7 @@ def get_class_weights(data_type):
         weight_list = weight_list/weight_list.sum()
         return weight_list
 
-    if data_type == 'shl':
+    elif data_type == 'shl':
         train_labels = np.load('data/shl_train_y.npy')
         w0 = len(train_labels) / len(train_labels[train_labels[:,0] == 1])
         w1 = len(train_labels) / len(train_labels[train_labels[:, 0] == 2])
@@ -88,7 +88,7 @@ def read_train_data(data_type,rs=False):
         return train_X,train_Y
 
     # ------------------------------------SHL-------------------------------------------------------------#
-    if data_type == 'shl':
+    elif data_type == 'shl':
         # read data from numpy file
         train_X = np.load('data/shl_train_x.npy')
         train_Y = np.load('data/shl_train_y.npy')
@@ -97,7 +97,8 @@ def read_train_data(data_type,rs=False):
             print("No resampling for SHL dataset")
             exit(0)
 
-        indices = np.random.shuffle(np.arange(len(train_X)))
+        indices = np.arange(len(train_X))
+        np.random.shuffle(np.arange(len(train_X)))
         train_X = train_X[indices]
         train_Y = train_Y[indices]
 
@@ -422,6 +423,9 @@ def train_sr_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
     #downsampling the high resolution dataset
     if data_type == 'ecg':
         train_X_r = train_X[:, ::sampling_ratio, :]
+    elif data_type == 'shl':
+        train_X_r = train_X[:,:,::sampling_ratio, :]
+
 
     # defining the generator to generate dataset
     def generator():
@@ -449,6 +453,9 @@ def test_sr_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2):
     if data_type=='ecg':
         test_X_r = test_X[:, ::sampling_ratio, :]
 
+    elif data_type=='shl':
+        test_X_r = test_X[:,:,::sampling_ratio,:]
+
     # defining the generator to generate dataset
     def generator():
         for i in range(len(test_X)):
@@ -475,6 +482,7 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
     train_X, train_Y = read_train_data(data_type,resample)
     np.random.seed(seed)
     #downsampling the high resolution dataset
+    # ------------------------------------ECG-------------------------------------------------------------#
     if data_type == 'ecg':
         indices = np.arange(192)
         n_missing = int(prob*192)
@@ -492,6 +500,26 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
                 train_mask[i][missing_indices]=0
             print("Loaded Training Data")
 
+    # ------------------------------------SHL-------------------------------------------------------------#
+
+    elif data_type == 'shl':
+        indices = np.arange(512)
+        n_missing = int(prob * 512)
+        if fixed:
+            train_X_m = np.zeros(train_X.shape)
+            train_mask = np.ones(train_X.shape)
+            for i, data in enumerate(train_X):
+                for j in range(6):
+                    if cont:
+                        missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                        missing_indices = np.arange(missing_start, missing_start + n_missing)
+                    else:
+                        missing_indices = np.random.choice(indices, n_missing, replace=False)
+                    train_X_m[i] = data
+                    train_X_m[i,j,missing_indices,:] = 0
+                    train_mask[i,j,missing_indices,:] = 0
+            print("Loaded Training Data")
+
 
     # defining the generator to generate dataset
     def generator():
@@ -499,17 +527,34 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
             if fixed:
                 yield train_X_m[i], train_mask[i],train_X[i], train_Y[i]
             else:
-                sample = train_X[i]
-                train_mask_sample = np.ones(sample.shape)
-                if cont:
-                    missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
-                    missing_indices = np.arange(missing_start, missing_start + n_missing)
-                else:
-                    missing_indices = np.random.choice(indices, n_missing, replace=False)
-                train_X_m_sample = sample.copy()
-                train_X_m_sample[missing_indices] = 0
-                train_mask_sample[missing_indices] = 0
-                yield train_X_m_sample, train_mask_sample, train_X[i], train_Y[i]
+                # ------------------------------------ECG-------------------------------------------------------------#
+                if data_type == 'ecg':
+                    sample = train_X[i]
+                    train_mask_sample = np.ones(sample.shape)
+                    if cont:
+                        missing_start = np.random.randint(0, int((1 - prob) * 192) + 1)
+                        missing_indices = np.arange(missing_start, missing_start + n_missing)
+                    else:
+                        missing_indices = np.random.choice(indices, n_missing, replace=False)
+                    train_X_m_sample = sample.copy()
+                    train_X_m_sample[missing_indices] = 0
+                    train_mask_sample[missing_indices] = 0
+                    yield train_X_m_sample, train_mask_sample, train_X[i], train_Y[i]
+
+                # ------------------------------------SHL-------------------------------------------------------------#
+                elif data_type == 'shl':
+                    sample = train_X[i]
+                    train_mask_sample = np.ones(sample.shape)
+                    train_X_m_sample = sample.copy()
+                    for j in range(6):
+                        if cont:
+                            missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                            missing_indices = np.arange(missing_start, missing_start + n_missing)
+                        else:
+                            missing_indices = np.random.choice(indices, n_missing, replace=False)
+                        train_X_m_sample[j,missing_indices,:] = 0
+                        train_mask_sample[j,missing_indices,:] = 0
+                    yield train_X_m_sample, train_mask_sample, train_X[i], train_Y[i]
 
     train_ds = tf.data.Dataset.from_generator(generator,output_types=(tf.float32, tf.float32, tf.float32, tf.float32))
     train_ds = train_ds.shuffle(shuffle_buffer_size)
@@ -528,6 +573,7 @@ def test_imp_dataset(data_type,batch_size,prob,seed,cont=False,fetch_buffer_size
     '''
     test_X, test_Y = read_test_data(data_type)
     # downsampling the high resolution dataset
+    # ------------------------------------ECG-------------------------------------------------------------#
     if data_type=='ecg':
         np.random.seed(seed)
         indices = np.arange(192)
@@ -544,6 +590,24 @@ def test_imp_dataset(data_type,batch_size,prob,seed,cont=False,fetch_buffer_size
             test_X_m[i][missing_indices] = 0
             test_mask[i][missing_indices] = 0
 
+    # ------------------------------------SHL-------------------------------------------------------------#
+    elif data_type=='shl':
+        np.random.seed(seed)
+        indices = np.arange(512)
+        n_missing = int(prob * 512)
+        test_X_m = np.zeros(test_X.shape)
+        test_mask = np.ones(test_X.shape)
+        for i, data in enumerate(test_X):
+            for j in range(6):
+                if cont:
+                    missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                    missing_indices = np.arange(missing_start, missing_start + n_missing)
+                else:
+                    missing_indices = np.random.choice(indices, n_missing, replace=False)
+                test_X_m[i] = data
+                test_X_m[i,j,missing_indices,:] = 0
+                test_mask[i,j,missing_indices,:] = 0
+
     print("Loaded Testing Data")
 
     # defining the generator to generate dataset
@@ -555,9 +619,5 @@ def test_imp_dataset(data_type,batch_size,prob,seed,cont=False,fetch_buffer_size
     test_ds = test_ds.prefetch(buffer_size=fetch_buffer_size)
     test_ds = test_ds.batch(batch_size)
     return test_ds
-
-
-
-
 
 

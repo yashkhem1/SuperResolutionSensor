@@ -225,6 +225,14 @@ def train_sr(opt):
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
+    if opt.data_type == 'shl':
+        inp_shape = (6,512//opt.sampling_ratio,1)
+        nclasses =  8
+        G = sr_model_func('shl')(inp_shape,opt.sampling_ratio)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
 
     print(G.summary())
     lr_v = tf.Variable(opt.init_lr)
@@ -328,6 +336,16 @@ def train_sr_gan(opt):
         nclasses =  5
         G = sr_model_func('ecg')(inp_shape,opt.sampling_ratio)
         D = disc_model_func('ecg')(inp_disc_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
+    if opt.data_type == 'shl':
+        inp_shape = (6,512//opt.sampling_ratio,1)
+        inp_disc_shape = (6,512,1)
+        nclasses =  8
+        G = sr_model_func('shl')(inp_shape,opt.sampling_ratio)
+        D = disc_model_func('shl')(inp_disc_shape)
         C = load_model(opt.classifier_path)
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
@@ -485,6 +503,13 @@ def train_imp(opt):
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
+    if opt.data_type == 'shl':
+        inp_shape = (6,512,2)
+        nclasses =  8
+        G = imp_model_func('shl')(inp_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
     print(G.summary())
     lr_v = tf.Variable(opt.init_lr)
@@ -608,6 +633,16 @@ def train_imp_gan(opt):
         nclasses =  5
         G = imp_model_func('ecg')(inp_shape)
         D = disc_model_func('ecg')(inp_disc_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
+    elif opt.data_type == 'shl':
+        inp_shape = (6,512,2)
+        inp_disc_shape = (6,512,1)
+        nclasses =  5
+        G = imp_model_func('shl')(inp_shape)
+        D = disc_model_func('shl')(inp_disc_shape)
         C = load_model(opt.classifier_path)
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
