@@ -370,7 +370,7 @@ def train_sr_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds), leave=False)
+        t = tqdm(enumerate(train_ds), dynamic_ncols=True)
         for step , (lr,hr,y) in t:
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -455,7 +455,7 @@ def train_sr_gan(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), dynamic_ncols=True)
         for step,(lr,hr,y) in t:
             step_time = time.time()
             hr_f = G(lr,training=False)
@@ -528,7 +528,7 @@ def train_imp(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds), leave=False)
+        t = tqdm(enumerate(train_ds), dynamic_ncols=True)
         for step , (x_m,mask,x,y) in t:
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -577,7 +577,7 @@ def train_imp(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), dynamic_ncols=True)
         for step,(x_m,mask,x,y) in t:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
@@ -668,7 +668,7 @@ def train_imp_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds),leave=False)
+        t = tqdm(enumerate(train_ds),dynamic_ncols=True)
         for step , (x_m,mask,x,y) in t:
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -767,7 +767,7 @@ def train_imp_gan(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), dynamic_ncols=True)
         for step,(x_m,mask,x,y) in t:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
