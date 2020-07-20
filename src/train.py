@@ -139,7 +139,7 @@ def train_clf(opt):
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate " + str(opt.init_lr * new_lr_decay))
 
         y_true_test = np.array([],dtype='int32')
         y_pred_test = np.array([],dtype='int32')
@@ -194,7 +194,7 @@ def train_clf(opt):
                 C.save(os.path.join(opt.save_dir, 'best_'+clf_string+'_' + str(opt.data_type) + '_prob_' + str(opt.prob)
                                  + '_imp_' + imp_string + '_perception_' + use_perception + '_maskedloss_'+masked_loss+
                                 '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.pt'))
-            tqdm.write('Saving Best generator with best accuracy:', accuracy_test, 'and F1 score:', f1_test)
+            tqdm.write('Saving Best generator with best accuracy:' + str(accuracy_test)+ ' and F1 score:' + str(f1_test))
             prev_best = f1_test
         if opt.prob==0:
             C.save(os.path.join(opt.save_dir, 'last_'+clf_string+'_'+ str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
@@ -288,7 +288,7 @@ def train_sr(opt):
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate " + str(opt.init_lr * new_lr_decay))
 
         x_true_test = []
         x_pred_test = []
@@ -315,7 +315,7 @@ def train_sr(opt):
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
-            tqdm.write('Saving Best generator with best MSE:', test_mse)
+            tqdm.write('Saving Best generator with best MSE:'+ str(test_mse))
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
 
@@ -449,7 +449,7 @@ def train_sr_gan(opt):
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate " + str(opt.init_lr * new_lr_decay))
 
         x_true_test = []
         x_pred_test = []
@@ -479,7 +479,7 @@ def train_sr_gan(opt):
             D.save(os.path.join(opt.save_dir,
                                 'best_disc-'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
                                     opt.use_perception_loss) + '.pt'))
-            tqdm.write('Saving Best generator with best MSE:', test_mse)
+            tqdm.write('Saving Best generator with best MSE:'+ str(test_mse))
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
         D.save(os.path.join(opt.save_dir, 'last_disc-'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
@@ -571,7 +571,7 @@ def train_imp(opt):
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate" + str(opt.init_lr * new_lr_decay))
 
         x_true_test = []
         x_pred_test = []
@@ -613,7 +613,7 @@ def train_imp(opt):
                 str_imp = 'imp_'
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
-            tqdm.write('Saving Best generator with best MSE:', test_mse)
+            tqdm.write('Saving Best generator with best MSE:' + str(test_mse))
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
 
@@ -761,7 +761,7 @@ def train_imp_gan(opt):
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate " +str(opt.init_lr * new_lr_decay))
 
         x_true_test = []
         x_pred_test = []
@@ -806,7 +806,7 @@ def train_imp_gan(opt):
             D.save(os.path.join(opt.save_dir,
                                 'best_disc-'+str_imp +str(opt.gan_type)+'_'+ str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
                                     opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
-            tqdm.write('Saving Best generator with best MSE:', test_mse)
+            tqdm.write('Saving Best generator with best MSE:'+str(test_mse))
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_gen-'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
         D.save(os.path.join(opt.save_dir,
