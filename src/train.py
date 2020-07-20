@@ -103,7 +103,7 @@ def train_clf(opt):
     for epoch in range(opt.epochs):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds), leave=False)
+        t = tqdm(enumerate(train_ds), dynamic_ncols=True)
         for step, (X, y_true) in t:
             if X.shape[0] < opt.train_batch_size:
                 break
@@ -143,7 +143,7 @@ def train_clf(opt):
 
         y_true_test = np.array([],dtype='int32')
         y_pred_test = np.array([],dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), dynamic_ncols=True)
         for step, (X, y_true) in enumerate(test_ds):
             step_time = time.time()
             y_pred = C(X, training=False)
@@ -251,7 +251,7 @@ def train_sr(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t= tqdm(enumerate(train_ds),leave=False)
+        t= tqdm(enumerate(train_ds),dynamic_ncols=True)
         for step , (lr,hr,y) in t:
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -294,7 +294,7 @@ def train_sr(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), dynamic_ncols=True)
         for step,(lr,hr,y) in t:
             step_time = time.time()
             hr_f = G(lr,training=False)
