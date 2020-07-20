@@ -103,7 +103,7 @@ def train_clf(opt):
     for epoch in range(opt.epochs):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds),  file=sys.stdout)
+        t = tqdm(enumerate(train_ds), leave=False)
         for step, (X, y_true) in t:
             if X.shape[0] < opt.train_batch_size:
                 break
@@ -132,18 +132,18 @@ def train_clf(opt):
         # print(y_pred_train)
         accuracy_train = accuracy_score(y_true_train,y_pred_train)
         f1_train = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  accuracy:{:.6f}, f1_score:{:.6f} ".format(
+        tqdm.write("Epoch: [{}/{}]  accuracy:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, accuracy_train, f1_train))
 
         #Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            print("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
 
         y_true_test = np.array([],dtype='int32')
         y_pred_test = np.array([],dtype='int32')
-        t = tqdm(enumerate(test_ds), file=sys.stdout)
+        t = tqdm(enumerate(test_ds), leave=False)
         for step, (X, y_true) in enumerate(test_ds):
             step_time = time.time()
             y_pred = C(X, training=False)
@@ -154,7 +154,7 @@ def train_clf(opt):
 
         accuracy_test = accuracy_score(y_true_test,y_pred_test)
         f1_test = f1_score(y_true_test,y_pred_test,average='macro')
-        print("Epoch: [{}/{}] test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, accuracy_test, f1_test))
+        tqdm.write("Epoch: [{}/{}] test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, accuracy_test, f1_test))
         if opt.use_sr_clf:
             model_defs = opt.model_path.split('/')[-1].split('_')
             sr_string = model_defs[1]
@@ -194,7 +194,7 @@ def train_clf(opt):
                 C.save(os.path.join(opt.save_dir, 'best_'+clf_string+'_' + str(opt.data_type) + '_prob_' + str(opt.prob)
                                  + '_imp_' + imp_string + '_perception_' + use_perception + '_maskedloss_'+masked_loss+
                                 '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.pt'))
-            print('Saving Best generator with best accuracy:', accuracy_test, 'and F1 score:', f1_test)
+            tqdm.write('Saving Best generator with best accuracy:', accuracy_test, 'and F1 score:', f1_test)
             prev_best = f1_test
         if opt.prob==0:
             C.save(os.path.join(opt.save_dir, 'last_'+clf_string+'_'+ str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
@@ -251,7 +251,7 @@ def train_sr(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t= tqdm(enumerate(train_ds),file=sys.stdout)
+        t= tqdm(enumerate(train_ds),leave=False)
         for step , (lr,hr,y) in t:
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -281,20 +281,20 @@ def train_sr(opt):
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
         train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
+        tqdm.write("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            print("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
 
         x_true_test = []
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), file=sys.stdout)
+        t = tqdm(enumerate(test_ds), leave=False)
         for step,(lr,hr,y) in t:
             step_time = time.time()
             hr_f = G(lr,training=False)
@@ -311,11 +311,11 @@ def train_sr(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
+        tqdm.write("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
-            print('Saving Best generator with best MSE:', test_mse)
+            tqdm.write('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
 
@@ -370,7 +370,7 @@ def train_sr_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds), file=sys.stdout)
+        t = tqdm(enumerate(train_ds), leave=False)
         for step , (lr,hr,y) in t:
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -442,20 +442,20 @@ def train_sr_gan(opt):
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
         train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
+        tqdm.write("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            print("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
 
         x_true_test = []
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), file=sys.stdout)
+        t = tqdm(enumerate(test_ds), leave=False)
         for step,(lr,hr,y) in t:
             step_time = time.time()
             hr_f = G(lr,training=False)
@@ -472,14 +472,14 @@ def train_sr_gan(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test - x_pred_test)**2)
         test_task_score = f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
+        tqdm.write("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
             D.save(os.path.join(opt.save_dir,
                                 'best_disc-'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
                                     opt.use_perception_loss) + '.pt'))
-            print('Saving Best generator with best MSE:', test_mse)
+            tqdm.write('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
         D.save(os.path.join(opt.save_dir, 'last_disc-'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
@@ -528,7 +528,7 @@ def train_imp(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds), file=sys.stdout)
+        t = tqdm(enumerate(train_ds), leave=False)
         for step , (x_m,mask,x,y) in t:
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -564,20 +564,20 @@ def train_imp(opt):
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
         train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
+        tqdm.write("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            print("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
 
         x_true_test = []
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), file=sys.stdout)
+        t = tqdm(enumerate(test_ds), leave=False)
         for step,(x_m,mask,x,y) in t:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
@@ -599,7 +599,7 @@ def train_imp(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
+        tqdm.write("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if opt.cont:
             if opt.fixed:
@@ -613,7 +613,7 @@ def train_imp(opt):
                 str_imp = 'imp_'
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
-            print('Saving Best generator with best MSE:', test_mse)
+            tqdm.write('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
 
@@ -668,7 +668,7 @@ def train_imp_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds),file=sys.stdout)
+        t = tqdm(enumerate(train_ds),leave=False)
         for step , (x_m,mask,x,y) in t:
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -754,20 +754,20 @@ def train_imp_gan(opt):
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
         train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
+        tqdm.write("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
             new_lr_decay = opt.lr_decay ** (epoch // opt.decay_every)
             lr_v.assign(opt.init_lr * new_lr_decay)
-            print("New learning rate", opt.init_lr * new_lr_decay)
+            tqdm.write("New learning rate", opt.init_lr * new_lr_decay)
 
         x_true_test = []
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), file=sys.stdout)
+        t = tqdm(enumerate(test_ds), leave=False)
         for step,(x_m,mask,x,y) in t:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
@@ -789,7 +789,7 @@ def train_imp_gan(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
+        tqdm.write("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if opt.cont:
             if opt.fixed:
@@ -806,7 +806,7 @@ def train_imp_gan(opt):
             D.save(os.path.join(opt.save_dir,
                                 'best_disc-'+str_imp +str(opt.gan_type)+'_'+ str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
                                     opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
-            print('Saving Best generator with best MSE:', test_mse)
+            tqdm.write('Saving Best generator with best MSE:', test_mse)
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_gen-'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
         D.save(os.path.join(opt.save_dir,
