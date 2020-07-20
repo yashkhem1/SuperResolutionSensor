@@ -98,6 +98,7 @@ def read_train_data(data_type,rs=False):
             exit(0)
 
         indices = np.arange(len(train_X))
+        np.random.seed(1)
         np.random.shuffle(np.arange(len(train_X)))
         train_X = train_X[indices]
         train_Y = train_Y[indices]
@@ -105,6 +106,7 @@ def read_train_data(data_type,rs=False):
         train_X = train_X.reshape(-1,6,512,1)
         train_Y = train_Y.reshape(-1) - 1
         train_Y = tf.keras.utils.to_categorical(train_Y, num_classes=8)
+        train_X, _, train_Y, _ = train_test_split(train_X, train_Y, random_state=1)
 
         return train_X, train_Y
 
@@ -136,12 +138,27 @@ def read_test_data(data_type):
     # ------------------------------------SHL-------------------------------------------------------------#
     elif data_type == 'shl':
         # read data from numpy file
-        test_X = np.load('data/shl_test_x.npy')
-        test_Y = np.load('data/shl_test_y.npy')
+        # test_X = np.load('data/shl_test_x.npy')
+        # test_Y = np.load('data/shl_test_y.npy')
+        #
+        # test_X = test_X.reshape(-1, 6, 512, 1)
+        # test_Y = test_Y.reshape(-1) - 1
+        # test_Y = tf.keras.utils.to_categorical(test_Y, num_classes=8)
+        train_X = np.load('data/shl_train_x.npy')
+        train_Y = np.load('data/shl_train_y.npy')
 
-        test_X = test_X.reshape(-1, 6, 512, 1)
-        test_Y = test_Y.reshape(-1) - 1
-        test_Y = tf.keras.utils.to_categorical(test_Y, num_classes=8)
+
+        indices = np.arange(len(train_X))
+        np.random.seed(1)
+        np.random.shuffle(np.arange(len(train_X)))
+        train_X = train_X[indices]
+        train_Y = train_Y[indices]
+
+        train_X = train_X.reshape(-1, 6, 512, 1)
+        train_Y = train_Y.reshape(-1) - 1
+        train_Y = tf.keras.utils.to_categorical(train_Y, num_classes=8)
+        _, test_X, _, test_Y = train_test_split(train_X, train_Y, random_state=1)
+
 
         return test_X, test_Y
 
