@@ -22,6 +22,7 @@ from src.models import *
 from src.data_loader import *
 
 from tqdm import tqdm, trange
+import sys
 
 
 def gradient_penalty(f, real, fake):
@@ -102,7 +103,7 @@ def train_clf(opt):
     for epoch in range(opt.epochs):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds), leave=False)
+        t = tqdm(enumerate(train_ds),  file=sys.stdout)
         for step, (X, y_true) in t:
             if X.shape[0] < opt.train_batch_size:
                 break
@@ -142,7 +143,7 @@ def train_clf(opt):
 
         y_true_test = np.array([],dtype='int32')
         y_pred_test = np.array([],dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), file=sys.stdout)
         for step, (X, y_true) in enumerate(test_ds):
             step_time = time.time()
             y_pred = C(X, training=False)
@@ -250,7 +251,7 @@ def train_sr(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t= tqdm(enumerate(train_ds), leave=False)
+        t= tqdm(enumerate(train_ds),file=sys.stdout)
         for step , (lr,hr,y) in t:
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -293,7 +294,7 @@ def train_sr(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), file=sys.stdout)
         for step,(lr,hr,y) in t:
             step_time = time.time()
             hr_f = G(lr,training=False)
@@ -369,7 +370,7 @@ def train_sr_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds), leave=False)
+        t = tqdm(enumerate(train_ds), file=sys.stdout)
         for step , (lr,hr,y) in t:
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -454,7 +455,7 @@ def train_sr_gan(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), file=sys.stdout)
         for step,(lr,hr,y) in t:
             step_time = time.time()
             hr_f = G(lr,training=False)
@@ -527,7 +528,7 @@ def train_imp(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds), leave=False)
+        t = tqdm(enumerate(train_ds), file=sys.stdout)
         for step , (x_m,mask,x,y) in t:
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -576,7 +577,7 @@ def train_imp(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), file=sys.stdout)
         for step,(x_m,mask,x,y) in t:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
@@ -667,7 +668,7 @@ def train_imp_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        t = tqdm(enumerate(train_ds),leave=False)
+        t = tqdm(enumerate(train_ds),file=sys.stdout)
         for step , (x_m,mask,x,y) in t:
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -766,7 +767,7 @@ def train_imp_gan(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        t = tqdm(enumerate(test_ds), leave=False)
+        t = tqdm(enumerate(test_ds), file=sys.stdout)
         for step,(x_m,mask,x,y) in t:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
