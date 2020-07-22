@@ -135,6 +135,8 @@ def read_train_data(data_type,rs=False):
         if rs:
             print("No resampling for audio dataset")
             exit(0)
+
+        return train_X, train_Y
         
 
     print("Loaded Train Data")
@@ -194,6 +196,8 @@ def read_test_data(data_type):
         #read from numpy file
         test_X = np.load('data/audio_X_test.npy')
         test_Y = np.load('data/audio_y_test.npy')
+
+        return test_X, test_Y
 
     print("Loaded Test Data")
 
