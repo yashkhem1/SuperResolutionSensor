@@ -12,7 +12,7 @@ class Options:
         # ===============================================================
         self.parser.add_argument('--data_type' , type=str, help='Dataset Type')
         self.parser.add_argument('--init_lr', type=float,  default=0.0001 , help='Initial Learning Rate for the model')
-        self.parser.add_argument('--epochs', type=float, default=100, help='Number of epochs in training')
+        self.parser.add_argument('--epochs', type=int, default=100, help='Number of epochs in training')
         self.parser.add_argument('--decay_half', type=int, default=0, help='Decay learning rate after half the epochs')
         self.parser.add_argument('--lr_decay', type=float, default=0.1, help='Decay factor of learning rate')
         self.parser.add_argument('--beta1', type=float, default=0.9, help='Value of Beta1 for adam optimizer')
