@@ -497,7 +497,7 @@ def audio_clf_model(inp_shape,nclasses):
     # conv = Dropout(0.3)(conv)
 
     outputs = Dense(nclasses, name='logits')(conv)
-    outputs = Activation('softmax', name='probs')(outputs)
+    # outputs = Activation('softmax', name='probs')(outputs)
 
     clf = Model(inputs, outputs)
     return clf
