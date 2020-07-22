@@ -104,9 +104,9 @@ def train_clf(opt):
     n_steps_test = len(list(test_ds))
 
     if opt.weighted:
-        class_weights = get_class_weights(opt.data_type)
+        class_weights = get_class_weights(opt.data_type)*nclasses
     else:
-        class_weights = np.array([1.0 / nclasses] * nclasses)
+        class_weights = np.array([1.0] * nclasses)
 
     for epoch in range(opt.epochs):
         y_true_train = np.array([],dtype='int32')
@@ -120,13 +120,13 @@ def train_clf(opt):
                 y_pred = C(X,training=True)
                 # print(class_weights)
                 # print(y_true)
-                # weights = tf.reduce_sum(class_weights*y_true,axis=1)
-                # unweighted_loss = tf.nn.softmax_cross_entropy_with_logits(y_true,y_pred)
-                # # print(weights)
-                # # print(unweighted_loss)
-                # loss = weights*unweighted_loss
-                # loss = tf.reduce_mean(loss)
-                loss = CategoricalCrossentropy(from_logits=True)(y_true,y_pred)
+                weights = tf.reduce_sum(class_weights*y_true,axis=1)
+                unweighted_loss = tf.nn.softmax_cross_entropy_with_logits(y_true,y_pred)
+                # print(weights)
+                # print(unweighted_loss)
+                loss = weights*unweighted_loss
+                loss = tf.reduce_mean(loss)
+                # loss = CategoricalCrossentropy(from_logits=True)(y_true,y_pred)
 
             grad = tape.gradient(loss, C.trainable_weights)
             c_optimizer.apply_gradients(zip(grad, C.trainable_weights))

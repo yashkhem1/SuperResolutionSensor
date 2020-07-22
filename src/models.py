@@ -431,75 +431,32 @@ def audio_clf_model(inp_shape,nclasses):
     :param nclasses: Number of classes for classification
     :return: Keras Model
     '''
-    # inp = Input(shape=inp_shape)
-    # outfilters = [16, 32, 64, 128]
-    # filters = 8
-    # input_length = inp_shape[0]
-    # n = Conv1D(filters, 5, 1, padding='same', kernel_initializer='he_normal')(inp)
-    # n = PReLU()(n)
-    # n = Conv1D(filters, 5, 3, padding='same', kernel_initializer='he_normal')(n)
-    # n = Dropout(0.5)(n)
-    # n = PReLU()(n)
-    # input_length/=3
-    #
-    # for i in range(len(outfilters)):
-    #     n = Conv1D(outfilters[i], 5, 1, padding='same', kernel_initializer='he_normal')(n)
-    #     n = Dropout(0.5)(n)
-    #     n = PReLU()(n)
-    #     n = Conv1D(outfilters[i], 5, 3, padding='same', kernel_initializer='he_normal')(n)
-    #     input_length/=3
-    #     n = Dropout(0.5)(n)
-    #     n = PReLU()(n)
-    #
-    # n = Flatten()(n)
-    # n = Dense(128)(n)
-    # n = PReLU()(n)
-    # n = Dense(nclasses)(n)
-    #
-    # clf = Model(inputs=inp, outputs=n, name='Classifier')
-    # return clf
-    inputs = Input(shape=(8000, 1), name='Input_1')
+    inp = Input(shape=inp_shape)
+    outfilters = [16, 32, 64, 64]
+    filters = 8
+    input_length = inp_shape[0]
+    n = Conv1D(filters, 5, 1, padding='same', kernel_initializer='he_normal')(inp)
+    n = PReLU()(n)
+    n = Conv1D(filters, 5, 3, padding='same', kernel_initializer='he_normal')(n)
+    n = BatchNormalization()(n)
+    n = PReLU()(n)
+    input_length/=3
 
-    # First Conv1D layer
-    conv = Conv1D(8, 13, padding='same', activation='relu', strides=1, name='Conv_1')(inputs)
-    conv = MaxPooling1D(3, name='Max_1')(conv)
-    conv = Dropout(0.3, name='Drop_1')(conv)
+    for i in range(len(outfilters)):
+        n = Conv1D(outfilters[i], 5, 1, padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+        n = Conv1D(outfilters[i], 5, 3, padding='same', kernel_initializer='he_normal')(n)
+        input_length/=3
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
 
-    # Second Conv1D layer
-    conv = Conv1D(16, 11, padding='same', activation='relu', strides=1, name='Conv_2')(conv)
-    conv = MaxPooling1D(3, name='Max_2')(conv)
-    conv = Dropout(0.3, name='Drop_2')(conv)
+    n = Flatten()(n)
+    n = Dense(128)(n)
+    n = PReLU()(n)
+    n = Dense(nclasses)(n)
 
-    # Third Conv1D layer
-    conv = Conv1D(32, 9, padding='same', activation='relu', strides=1, name='Conv_3')(conv)
-    conv = MaxPooling1D(3, name='Max_3')(conv)
-    conv = Dropout(0.3, name='Drop_3')(conv)
-
-    # Fourth Conv1D layer
-    conv = Conv1D(64, 7, padding='same', activation='relu', strides=1, name='Conv_4')(conv)
-    conv = MaxPooling1D(3, name='Max_4')(conv)
-    conv = Dropout(0.3, name='Drop_4')(conv)
-
-    # Fifth Conv1D layer
-    conv = Conv1D(64, 7, padding='same', activation='relu', strides=1, name='Conv_5')(conv)
-    conv = MaxPooling1D(3, name='Max_5')(conv)
-    conv = Dropout(0.3, name='Drop_5')(conv)
-
-    # Flatten layer
-    conv = Flatten(name='Flatten_1')(conv)
-
-    # Dense Layer 1
-    conv = Dense(256, activation='relu', name='Dense_1')(conv)
-    conv = Dropout(0.3, name='Drop_6')(conv)
-
-    # #Dense Layer 2
-    # conv = Dense(128, activation='relu')(conv)
-    # conv = Dropout(0.3)(conv)
-
-    outputs = Dense(nclasses, name='logits')(conv)
-    # outputs = Activation('softmax', name='probs')(outputs)
-
-    clf = Model(inputs, outputs)
+    clf = Model(inputs=inp, outputs=n, name='Classifier')
     return clf
 
 def sr_model_func(data_type):
