@@ -98,6 +98,7 @@ def train_clf(opt):
 
     test_ds = test_cf_dataset(opt.data_type,opt.sampling_ratio,opt.test_batch_size,opt.fetch_buffer_size,sr_model,opt.interp,
                               opt.interp_type,opt.prob, opt.seed, opt.cont, imp_model)
+
     prev_best = -1*np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -110,7 +111,7 @@ def train_clf(opt):
     for epoch in range(opt.epochs):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(train_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_train)
         for step, (X, y_true) in enumerate(train_ds):
             if X.shape[0] < opt.train_batch_size:
                 break
@@ -151,7 +152,7 @@ def train_clf(opt):
 
         y_true_test = np.array([],dtype='int32')
         y_pred_test = np.array([],dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(test_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_test)
         for step, (X, y_true) in enumerate(test_ds):
             step_time = time.time()
             y_pred = C(X, training=False)
@@ -261,6 +262,8 @@ def train_sr(opt):
     train_ds = train_sr_dataset(opt.data_type, opt.sampling_ratio, opt.train_batch_size, opt.shuffle_buffer_size,
                                 opt.fetch_buffer_size, opt.resample)
     test_ds = test_sr_dataset(opt.data_type, opt.sampling_ratio, opt.test_batch_size, opt.fetch_buffer_size)
+
+
     prev_best = np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -270,7 +273,7 @@ def train_sr(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(train_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_train)
         for step , (lr,hr,y) in enumerate(train_ds):
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -315,7 +318,7 @@ def train_sr(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(test_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_test)
         for step,(lr,hr,y) in enumerate(test_ds):
             step_time = time.time()
             hr_f = G(lr,training=False)
@@ -394,6 +397,8 @@ def train_sr_gan(opt):
     train_ds = train_sr_dataset(opt.data_type, opt.sampling_ratio, opt.train_batch_size, opt.shuffle_buffer_size,
                                 opt.fetch_buffer_size, opt.resample)
     test_ds = test_sr_dataset(opt.data_type, opt.sampling_ratio, opt.test_batch_size, opt.fetch_buffer_size)
+
+
     prev_best = np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -403,7 +408,7 @@ def train_sr_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(train_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_train)
         for step , (lr,hr,y) in enumerate(train_ds):
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -492,7 +497,7 @@ def train_sr_gan(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(test_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_test)
         for step,(lr,hr,y) in enumerate(test_ds):
             step_time = time.time()
             hr_f = G(lr,training=False)
@@ -566,6 +571,7 @@ def train_imp(opt):
     train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.cont, opt.fixed, opt.shuffle_buffer_size,
                                 opt.fetch_buffer_size, opt.resample)
     test_ds = test_imp_dataset(opt.data_type, opt.test_batch_size, opt.prob, opt.seed, opt.cont, opt.fetch_buffer_size)
+
     prev_best = np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -575,7 +581,7 @@ def train_imp(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(train_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_train)
         for step , (x_m,mask,x,y) in enumerate(train_ds):
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -626,7 +632,7 @@ def train_imp(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(test_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_test)
         for step,(x_m,mask,x,y) in test_ds:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
@@ -719,6 +725,7 @@ def train_imp_gan(opt):
     train_ds = train_imp_dataset(opt.data_type,  opt.train_batch_size, opt.prob, opt.seed, opt.cont, opt.fixed, opt.shuffle_buffer_size,
                                 opt.fetch_buffer_size, opt.resample)
     test_ds = test_imp_dataset(opt.data_type, opt.test_batch_size, opt.prob, opt.seed, opt.cont, opt.fetch_buffer_size)
+
     prev_best = np.inf
     n_steps_train = len(list(train_ds))
     n_steps_test = len(list(test_ds))
@@ -728,7 +735,7 @@ def train_imp_gan(opt):
         x_pred_train = []
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(train_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_train)
         for step , (x_m,mask,x,y) in enumerate(train_ds):
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -827,7 +834,7 @@ def train_imp_gan(opt):
         x_pred_test = []
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
-        bar = Bar('>>>', fill='>', max=len(test_ds))
+        bar = Bar('>>>', fill='>', max=n_steps_test)
         for step,(x_m,mask,x,y) in enumerate(test_ds):
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
