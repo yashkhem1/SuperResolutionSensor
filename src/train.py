@@ -76,6 +76,13 @@ def train_clf(opt):
         nclasses = 8
         C = clf_model_func('shl')(inp_shape,nclasses)
 
+    elif opt.data_type == 'audio':
+        inp_shape = (8000//opt.sampling_ratio,1)
+        if opt.use_sr_clf or opt.interp:
+            inp_shape = (8000,1)
+        nclasses =  10
+        C = clf_model_func('audio')(inp_shape,nclasses)
+
     print(C.summary())
     lr_v = tf.Variable(opt.init_lr)
     c_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
@@ -226,10 +233,18 @@ def train_sr(opt):
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
-    if opt.data_type == 'shl':
+    elif opt.data_type == 'shl':
         inp_shape = (6,512//opt.sampling_ratio,1)
         nclasses =  8
         G = sr_model_func('shl')(inp_shape,opt.sampling_ratio)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
+    elif opt.data_type == 'audio':
+        inp_shape = (8000//opt.sampling_ratio,1)
+        nclasses =  10
+        G = sr_model_func('audio')(inp_shape,opt.sampling_ratio)
         C = load_model(opt.classifier_path)
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
@@ -341,12 +356,22 @@ def train_sr_gan(opt):
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
-    if opt.data_type == 'shl':
+    elif opt.data_type == 'shl':
         inp_shape = (6,512//opt.sampling_ratio,1)
         inp_disc_shape = (6,512,1)
         nclasses =  8
         G = sr_model_func('shl')(inp_shape,opt.sampling_ratio)
         D = disc_model_func('shl')(inp_disc_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
+    elif opt.data_type == 'audio':
+        inp_shape = (8000//opt.sampling_ratio,1)
+        inp_disc_shape = (8000,1)
+        nclasses =  10
+        G = sr_model_func('audio')(inp_shape,opt.sampling_ratio)
+        D = disc_model_func('audio')(inp_disc_shape)
         C = load_model(opt.classifier_path)
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
@@ -504,10 +529,18 @@ def train_imp(opt):
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
-    if opt.data_type == 'shl':
+    elif opt.data_type == 'shl':
         inp_shape = (6,512,2)
         nclasses =  8
         G = imp_model_func('shl')(inp_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
+    elif opt.data_type == 'audio':
+        inp_shape = (8000,2)
+        nclasses =  10
+        G = imp_model_func('audio')(inp_shape)
         C = load_model(opt.classifier_path)
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
@@ -648,6 +681,15 @@ def train_imp_gan(opt):
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
+    elif opt.data_type == 'audio':
+        inp_shape = (8000,2)
+        inp_disc_shape = (8000,1)
+        nclasses =  10
+        G = imp_model_func('audio')(inp_shape)
+        D = disc_model_func('audio')(inp_disc_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
     print(G.summary())
     print(D.summary())
