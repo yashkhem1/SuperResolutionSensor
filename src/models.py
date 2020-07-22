@@ -438,17 +438,17 @@ def audio_clf_model(inp_shape,nclasses):
     n = Conv1D(filters, 5, 1, padding='same', kernel_initializer='he_normal')(inp)
     n = PReLU()(n)
     n = Conv1D(filters, 5, 3, padding='same', kernel_initializer='he_normal')(n)
-    n = BatchNormalization()(n)
+    n = Dropout(0.5)(n)
     n = PReLU()(n)
     input_length/=3
 
     for i in range(len(outfilters)):
         n = Conv1D(outfilters[i], 5, 1, padding='same', kernel_initializer='he_normal')(n)
-        n = BatchNormalization()(n)
+        n = Dropout(0.5)(n)
         n = PReLU()(n)
         n = Conv1D(outfilters[i], 5, 3, padding='same', kernel_initializer='he_normal')(n)
         input_length/=3
-        n = BatchNormalization()(n)
+        n = Dropout(0.5)(n)
         n = PReLU()(n)
 
     n = Flatten()(n)
