@@ -432,21 +432,22 @@ def audio_clf_model(inp_shape,nclasses):
     :return: Keras Model
     '''
     inp = Input(shape=inp_shape)
-    outfilters = [16, 32, 64, 64]
+    outfilters = [16, 32, 64, 128]
     filters = 8
     input_length = inp_shape[0]
-    n = Conv1D(filters, 5, 1, padding='same', kernel_initializer='he_normal')(inp)
+    n = Conv1D(filters, 13, 1, padding='same', kernel_initializer='he_normal')(inp)
     n = PReLU()(n)
-    n = Conv1D(filters, 5, 3, padding='same', kernel_initializer='he_normal')(n)
-    n = Dropout(0.5)(n)
+    n = Conv1D(filters, 13, 3, padding='same', kernel_initializer='he_normal')(n)
+    n = BatchNormalization()(n)
     n = PReLU()(n)
     input_length/=3
 
     for i in range(len(outfilters)):
-        n = Conv1D(outfilters[i], 5, 1, padding='same', kernel_initializer='he_normal')(n)
-        n = Dropout(0.5)(n)
+        n = Conv1D(outfilters[i], 13-2*(i+1), 1, padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
         n = PReLU()(n)
-        n = Conv1D(outfilters[i], 5, 3, padding='same', kernel_initializer='he_normal')(n)
+        n = Conv1D(outfilters[i], 13-2*(i+1), 3, padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
         input_length/=3
         n = PReLU()(n)
 
