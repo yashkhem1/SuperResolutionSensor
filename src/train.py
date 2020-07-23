@@ -120,13 +120,13 @@ def train_clf(opt):
                 y_pred = C(X,training=True)
                 # print(class_weights)
                 # print(y_true)
-                # weights = tf.reduce_sum(class_weights*y_true,axis=1)
-                # unweighted_loss = tf.nn.softmax_cross_entropy_with_logits(y_true,y_pred)
-                # # print(weights)
-                # # print(unweighted_loss)
-                # loss = weights*unweighted_loss
-                # loss = tf.reduce_mean(loss)
-                loss = CategoricalCrossentropy(from_logits=True)(y_true,y_pred)
+                weights = tf.reduce_sum(class_weights*y_true,axis=1)
+                unweighted_loss = tf.nn.softmax_cross_entropy_with_logits(y_true,y_pred)
+                # print(weights)
+                # print(unweighted_loss)
+                loss = weights*unweighted_loss
+                loss = tf.reduce_mean(loss)
+                # loss = CategoricalCrossentropy(from_logits=True)(y_true,y_pred)
 
             grad = tape.gradient(loss, C.trainable_weights)
             c_optimizer.apply_gradients(zip(grad, C.trainable_weights))
@@ -202,21 +202,21 @@ def train_clf(opt):
             if opt.prob==0:
                 C.save(os.path.join(opt.save_dir, 'best_'+clf_string+'_' + str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
                                     + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
-                                    '_weighted_' + str(opt.weighted) + '.pt'))
+                                    '_weighted_' + str(opt.weighted) + '.hdf5'))
             else:
                 C.save(os.path.join(opt.save_dir, 'best_'+clf_string+'_' + str(opt.data_type) + '_prob_' + str(opt.prob)
                                  + '_imp_' + imp_string + '_perception_' + use_perception + '_maskedloss_'+masked_loss+
-                                '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.pt'))
+                                '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.hdf5'))
             print('Saving Best generator with best accuracy:' + str(accuracy_test)+ ' and F1 score:' + str(f1_test))
             prev_best = f1_test
         if opt.prob==0:
             C.save(os.path.join(opt.save_dir, 'last_'+clf_string+'_'+ str(opt.data_type) + '_sampling_'+str(opt.sampling_ratio)
                                     + '_sr_' + sr_string + '_perception_'+ use_perception+'_resample_'+ str(opt.resample) +
-                                    '_weighted_' + str(opt.weighted) + '.pt'))
+                                    '_weighted_' + str(opt.weighted) + '.hdf5'))
         else:
             C.save(os.path.join(opt.save_dir, 'last_'+clf_string+'_' + str(opt.data_type) + '_prob_' + str(opt.prob)
                                 + '_imp_' + imp_string + '_perception_' + use_perception + '_maskedloss_' + masked_loss +
-                                '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.pt'))
+                                '_resample_' + str(opt.resample) + '_weighted_' + str(opt.weighted) + '.hdf5'))
 
 
 
@@ -341,10 +341,10 @@ def train_sr(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.hdf5'))
             print('Saving Best generator with best MSE:'+ str(test_mse))
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.hdf5'))
 
 
 # ===============================================================
@@ -520,15 +520,15 @@ def train_sr_gan(opt):
         print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, test_mse, test_task_score))
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.hdf5'))
             D.save(os.path.join(opt.save_dir,
                                 'best_disc-'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
-                                    opt.use_perception_loss) + '.pt'))
+                                    opt.use_perception_loss) + '.hdf5'))
             print('Saving Best generator with best MSE:'+ str(test_mse))
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.hdf5'))
         D.save(os.path.join(opt.save_dir, 'last_disc-'+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.sampling_ratio) + '_' + str(
-            opt.use_perception_loss) + '.pt'))
+            opt.use_perception_loss) + '.hdf5'))
 
 
 # ===============================================================
@@ -670,10 +670,10 @@ def train_imp(opt):
             else:
                 str_imp = 'imp_'
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.hdf5'))
             print('Saving Best generator with best MSE:' + str(test_mse))
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_cnn-'+str_imp+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.hdf5'))
 
 
 # ===============================================================
@@ -872,16 +872,16 @@ def train_imp_gan(opt):
             else:
                 str_imp = 'imp-'
         if test_mse < prev_best:
-            G.save(os.path.join(opt.save_dir,'best_gen-'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+            G.save(os.path.join(opt.save_dir,'best_gen-'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.hdf5'))
             D.save(os.path.join(opt.save_dir,
                                 'best_disc-'+str_imp +str(opt.gan_type)+'_'+ str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
-                                    opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
+                                    opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.hdf5'))
             print('Saving Best generator with best MSE:'+str(test_mse))
             prev_best = test_mse
-        G.save(os.path.join(opt.save_dir,'last_gen-'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.pt'))
+        G.save(os.path.join(opt.save_dir,'last_gen-'+str_imp+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.prob)+'_'+str(opt.use_perception_loss)+'_'+str(opt.masked_mse_loss)+'.hdf5'))
         D.save(os.path.join(opt.save_dir,
                             'last_disc-'+str_imp+str(opt.gan_type)+'_' + str(opt.data_type) + '_' + str(opt.prob) + '_' + str(
-                                opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.pt'))
+                                opt.use_perception_loss)+'_'+str(opt.masked_mse_loss) + '.hdf5'))
 
 
 
