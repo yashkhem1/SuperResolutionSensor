@@ -12,7 +12,7 @@ from sklearn.utils import class_weight
 import tensorflow as tf
 import tensorflow.keras
 from tensorflow.keras.layers import Dense, Conv1D, Conv2D, MaxPool1D, Flatten, concatenate, UpSampling1D, UpSampling2D, MaxPooling1D
-from tensorflow.keras.layers import Input, BatchNormalization, Activation, Dropout, Add, LeakyReLU, GaussianNoise,PReLU
+from tensorflow.keras.layers import Input, BatchNormalization, Activation, Dropout, Add, LeakyReLU, GaussianNoise,PReLU, ReLU
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.utils import to_categorical
@@ -436,23 +436,25 @@ def audio_clf_model(inp_shape,nclasses):
     filters = 8
     input_length = inp_shape[0]
     n = Conv1D(filters, 13, 1, padding='same', kernel_initializer='he_normal')(inp)
-    n = PReLU()(n)
+    n = ReLU()(n)
+    n = Conv1D(filters, 13, 1, padding='same', kernel_initializer='he_normal')(n)
     n = MaxPooling1D(pool_size=3)(n)
-    n = Dropout(0.5)(n)
-    n = PReLU()(n)
+    n = Dropout(0.3)(n)
+    n = ReLU()(n)
     input_length/=3
 
     for i in range(len(outfilters)):
         n = Conv1D(outfilters[i], 13-2*(i+1), 1, padding='same', kernel_initializer='he_normal')(n)
-        n = PReLU()(n)
+        n = ReLU()(n)
+        n = Conv1D(outfilters[i], 13 - 2 * (i + 1), 1, padding='same', kernel_initializer='he_normal')(n)
         n = MaxPooling1D(pool_size=3)(n)
-        n = Dropout(0.5)(n)
+        n = Dropout(0.3)(n)
         input_length/=3
-        n = PReLU()(n)
+        n = ReLU()(n)
 
     n = Flatten()(n)
     n = Dense(256)(n)
-    n = PReLU()(n)
+    n = ReLU()(n)
     n = Dense(nclasses)(n)
 
     clf = Model(inputs=inp, outputs=n, name='Classifier')
