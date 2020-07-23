@@ -133,7 +133,7 @@ def train_clf(opt):
             y_true_train = np.append(y_true_train,np.argmax(y_true,axis=1))
             y_pred_train = np.append(y_pred_train,np.argmax(y_pred,axis=1))
 
-            bar.suffix = "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, cross_entropy_loss:{:.6f} ".format(
+            bar.suffix = "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, ce_loss:{:.6f} ".format(
                     epoch, opt.epochs, step, n_steps_train, time.time() - step_time, loss)
             bar.next()
 
@@ -297,7 +297,7 @@ def train_sr(opt):
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            bar.suffix = ("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}".format(epoch,
+            bar.suffix = ("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, p_loss:{:.6f}".format(epoch,
                     opt.epochs,step, n_steps_train,time.time() - step_time, loss_mse,loss_pr))
             bar.next()
 
@@ -473,8 +473,8 @@ def train_sr_gan(opt):
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            bar.suffix = '''Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}, adv:{:.6f},
-             d_fake_loss:{:.6f}, d_real_loss:{:.6f},  gradient_penalty:{:.6f}'''.format(epoch,
+            bar.suffix = '''Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, p_loss:{:.6f}, adv:{:.6f},
+             d_f_loss:{:.6f}, d_r_loss:{:.6f},  g_pen:{:.6f}'''.format(epoch,
                                                                        opt.epochs, step, n_steps_train,
                                                                        time.time() - step_time, loss_mse, loss_pr,
                                                                        loss_gen, f_loss, r_loss, grad_p)
@@ -611,7 +611,7 @@ def train_imp(opt):
             y_pred = np.argmax(C(x_pred_orig,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            bar.suffix = "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}".format(epoch,
+            bar.suffix = "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, p_loss:{:.6f}".format(epoch,
                     opt.epochs,step, n_steps_train,time.time() - step_time, loss_mse,loss_pr)
             bar.next()
 
@@ -811,7 +811,7 @@ def train_imp_gan(opt):
             y_pred = np.argmax(C(x_pred_orig,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            bar.suffix = "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, perception_loss:{:.6f}, adv:{:.6f}, d_fake_loss:{:.6f}, d_real_loss:{:.6f}, gradient_penalty:{:.6f}".format(epoch,
+            bar.suffix = "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, p_loss:{:.6f}, adv:{:.6f}, d_f_loss:{:.6f}, d_r_loss:{:.6f}, g_pen:{:.6f}".format(epoch,
                                                                        opt.epochs, step, n_steps_train,
                                                                        time.time() - step_time, loss_mse, loss_pr,
                                                                        loss_gen, f_loss, r_loss, grad_p)
