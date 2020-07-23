@@ -98,7 +98,7 @@ def audio_sr_model(inp_shape,sampling_ratio):
     :return: Keras Model
     '''
     inp = Input(shape=inp_shape)
-    filter_size = 13-2*np.log2(sampling_ratio)
+    filter_size = int(13-2*np.log2(sampling_ratio))
     n = Conv1D(64, filter_size, 1, padding='same', activation='relu', kernel_initializer='he_normal')(inp)
     temp = n
 
