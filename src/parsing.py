@@ -10,10 +10,10 @@ class Options:
         # ===============================================================
         #                     General options
         # ===============================================================
-        self.parser.add_argument('--data_type' , type=str, help='Dataset Type')
+        self.parser.add_argument('--data_type' , type=str, help='Dataset Type', choices=['ecg','shl','audio'])
         self.parser.add_argument('--init_lr', type=float,  default=0.0001 , help='Initial Learning Rate for the model')
-        self.parser.add_argument('--epochs', type=int, default=100, help='Number of epochs in training')
-        self.parser.add_argument('--decay_half', type=int, default=0, help='Decay learning rate after half the epochs')
+        self.parser.add_argument('--epochs', type=int, default=200, help='Number of epochs in training')
+        self.parser.add_argument('--decay_half', type=int, default=1, help='Decay learning rate after half the epochs')
         self.parser.add_argument('--lr_decay', type=float, default=0.1, help='Decay factor of learning rate')
         self.parser.add_argument('--beta1', type=float, default=0.9, help='Value of Beta1 for adam optimizer')
         self.parser.add_argument('--train_batch_size', type=int, default=64, help='Training Batch Size')
@@ -25,7 +25,7 @@ class Options:
         self.parser.add_argument('--weighted', type=int, default=0,
                                  help='Use weighted cross entropy loss')
         self.parser.add_argument('--model_type', type=str, help='Train_Type')
-        self.parser.add_argument('--save_dir', type=str, default='shl_ckpt',help='Directory for saving model')
+        self.parser.add_argument('--save_dir', type=str, default='audio_ckpt',help='Directory for saving model')
         self.parser.add_argument('--use_perception_loss', type=int, default=0, help='Use perception loss')
         self.parser.add_argument('--classifier_path', type=str, default='',
                                  help='Path to classification model for task based loss')
