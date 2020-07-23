@@ -105,7 +105,7 @@ def audio_sr_model(inp_shape,sampling_ratio):
     for i in range(4):  # Number of residual blocks
         nn = Conv1D(64, filter_size, 1, padding='same', kernel_initializer='he_normal')(n)
         nn = Dropout(0.3)(nn)
-        nn = PReLU()(nn)
+        nn = LeakyReLU(alpha=0.01)(nn)
         nn = Conv1D(64, filter_size, 1, padding='same', kernel_initializer='he_normal')(nn)
         nn = Dropout(0.3)(nn)
         nn = Add()([n, nn])
@@ -120,7 +120,7 @@ def audio_sr_model(inp_shape,sampling_ratio):
         n = Conv1D(128, filter_size+2*i, 1, padding='same', kernel_initializer='he_normal')(n)
         n = UpSampling1D(size=2)(n)
         n = Conv1D(128, filter_size+2*(i+1), 1, padding='same', kernel_initializer='he_normal')(n)
-        n = PReLU()(n)
+        n = LeakyReLU(alpha=0.01)(n)
 
     n = Conv1D(1, 1, 1, padding='same', kernel_initializer='he_normal')(n)
     gen = Model(inputs=inp, outputs=n, name='SR_generator')
@@ -218,15 +218,16 @@ def audio_imp_model(inp_shape):
     filters = 16
     n = Conv1D(filters, 13, 1, padding='same', kernel_initializer='he_normal')(inp)
     n = Dropout(0.3)(n)
-    n = PReLU()(n)
+    n = LeakyReLU(alpha=0.01)(n)
     down_array = [n]
 
     for i in range(len(outfilters)):
         n = Conv1D(outfilters[i], 13-2*i, 1, padding='same', kernel_initializer='he_normal')(n)
         n = MaxPooling1D(pool_size=2)(n)
-        n = PReLU()(n)
+        n = LeakyReLU(alpha=0.01)(n)
         n = Conv1D(outfilters[i], 13-2*(i+1), 1, padding='same', kernel_initializer='he_normal')(n)
         n = Dropout(0.3)(n)
+        n = LeakyReLU(alpha=0.01)(n)
         down_array.append(n)
 
     outfilters.reverse()
@@ -236,10 +237,10 @@ def audio_imp_model(inp_shape):
         n = UpSampling1D(size=2)(n)
         n = Conv1D(outfilters[i], 7 + 2*i, 1, padding='same', kernel_initializer='he_normal')(n)
         n = Dropout(0.3)(n)
-        n = PReLU()(n)
+        n = LeakyReLU(alpha=0.01)(n)
         n = concatenate([n,down_array[len(outfilters)-i-1]],axis=-1)
         n = Conv1D(outfilters[i], 7+2*(i+1), 1, padding='same', kernel_initializer='he_normal')(n)
-        n = PReLU(n)
+        n = LeakyReLU(alpha=0.01)(n)
 
 
     n = Conv1D(1,1,1,padding='same', kernel_initializer='he_normal')(n)
@@ -323,25 +324,25 @@ def audio_disc_model(inp_shape):
     outfilters = [16,32,64,64]
     filters = 8
     n = Conv1D(filters, 13, 1, padding='same', kernel_initializer='he_normal')(inp)
-    n = PReLU()(n)
+    n = LeakyReLU(alpha=0.01)(n)
     n = Conv1D(filters, 13, 1, padding='same', kernel_initializer='he_normal')(n)
     n = MaxPooling1D(pool_size=3)(n)
     n = Dropout(0.3)(n)
-    n = PReLU()(n)
+    n = LeakyReLU(alpha=0.01)(n)
 
     for i in range(len(outfilters)):
         n = Conv1D(outfilters[i], 13-2*(i+1), 1, padding='same', kernel_initializer='he_normal')(n)
         # n = BatchNormalization()(n)
-        n = PReLU()(n)
+        n = LeakyReLU(alpha=0.01)(n)
         n = Conv1D(outfilters[i], 13-2*(i+1), 1, padding='same', kernel_initializer='he_normal')(n)
         n = MaxPooling1D(pool_size=3)(n)
         n = Dropout(0.3)(n)
         # n = BatchNormalization()(n)
-        n = PReLU()(n)
+        n = LeakyReLU(alpha=0.01)(n)
 
     n = Flatten()(n)
     n = Dense(128)(n)
-    # n = PReLU()(n)
+    n = LeakyReLU(alpha=0.01)(n)
     n = Dense(1)(n)
     # n = Activation('sigmoid')(n)
 
