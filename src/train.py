@@ -112,6 +112,7 @@ def train_clf(opt):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_train)
+        epoch_time = time.time()
         for step, (X, y_true) in enumerate(train_ds):
             if X.shape[0] < opt.train_batch_size:
                 break
@@ -142,8 +143,8 @@ def train_clf(opt):
         bar.finish()
         accuracy_train = accuracy_score(y_true_train,y_pred_train)
         f1_train = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  accuracy:{:.6f}, f1_score:{:.6f} ".format(
-            epoch, opt.epochs, accuracy_train, f1_train))
+        print("Epoch: [{}/{}] time:{:.1f}s, accuracy:{:.6f}, f1_score:{:.6f} ".format(
+            epoch, opt.epochs, time.time()-epoch_time, accuracy_train, f1_train))
 
         #Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
@@ -154,6 +155,7 @@ def train_clf(opt):
         y_true_test = np.array([],dtype='int32')
         y_pred_test = np.array([],dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_test)
+        epoch_time = time.time()
         for step, (X, y_true) in enumerate(test_ds):
             step_time = time.time()
             y_pred = C(X, training=False)
@@ -167,7 +169,7 @@ def train_clf(opt):
 
         accuracy_test = accuracy_score(y_true_test,y_pred_test)
         f1_test = f1_score(y_true_test,y_pred_test,average='macro')
-        print("Epoch: [{}/{}] test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, accuracy_test, f1_test))
+        print("Epoch: [{}/{}] time:{:.1f}s, test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, time.time()-epoch_time, accuracy_test, f1_test))
         if opt.use_sr_clf:
             model_defs = opt.model_path.split('/')[-1].split('_')
             sr_string = model_defs[1]
@@ -275,6 +277,7 @@ def train_sr(opt):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_train)
+        epoch_time = time.time()
         for step , (lr,hr,y) in enumerate(train_ds):
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -306,8 +309,8 @@ def train_sr(opt):
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
         train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
-            epoch, opt.epochs, train_mse, train_task_score))
+        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+            epoch, opt.epochs, time.time()-epoch_time, train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
@@ -320,6 +323,7 @@ def train_sr(opt):
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_test)
+        epoch_time = time.time()
         for step,(lr,hr,y) in enumerate(test_ds):
             step_time = time.time()
             hr_f = G(lr,training=False)
@@ -338,8 +342,8 @@ def train_sr(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
-            epoch, opt.epochs, test_mse, test_task_score))
+        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+            epoch, opt.epochs, time.time()-epoch_time,test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.hdf5'))
             print('Saving Best generator with best MSE:'+ str(test_mse))
@@ -410,6 +414,7 @@ def train_sr_gan(opt):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_train)
+        epoch_time = time.time()
         for step , (lr,hr,y) in enumerate(train_ds):
             if lr.shape[0]<opt.train_batch_size:
                 break
@@ -485,8 +490,8 @@ def train_sr_gan(opt):
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
         train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
-            epoch, opt.epochs, train_mse, train_task_score))
+        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+            epoch, opt.epochs, time.time()-epoch_time,train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
@@ -499,6 +504,7 @@ def train_sr_gan(opt):
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_test)
+        epoch_time = time.time()
         for step,(lr,hr,y) in enumerate(test_ds):
             step_time = time.time()
             hr_f = G(lr,training=False)
@@ -517,8 +523,8 @@ def train_sr_gan(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test - x_pred_test)**2)
         test_task_score = f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
-            epoch, opt.epochs, test_mse, test_task_score))
+        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+            epoch, opt.epochs, time.time()-epoch_time,test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.hdf5'))
             D.save(os.path.join(opt.save_dir,
@@ -583,6 +589,7 @@ def train_imp(opt):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_train)
+        epoch_time = time.time()
         for step , (x_m,mask,x,y) in enumerate(train_ds):
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -620,8 +627,8 @@ def train_imp(opt):
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
         train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
-            epoch, opt.epochs, train_mse, train_task_score))
+        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+            epoch, opt.epochs, time.time()-epoch_time,train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
@@ -634,6 +641,7 @@ def train_imp(opt):
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_test)
+        epoch_time = time.time()
         for step,(x_m,mask,x,y) in test_ds:
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
@@ -657,8 +665,8 @@ def train_imp(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
-            epoch, opt.epochs, test_mse, test_task_score))
+        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+            epoch, opt.epochs,time.time()-epoch_time, test_mse, test_task_score))
         if opt.cont:
             if opt.fixed:
                 str_imp = 'imp-cont-fixed_'
@@ -737,6 +745,7 @@ def train_imp_gan(opt):
         y_true_train = np.array([],dtype='int32')
         y_pred_train = np.array([],dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_train)
+        epoch_time = time.time()
         for step , (x_m,mask,x,y) in enumerate(train_ds):
             if x.shape[0]<opt.train_batch_size:
                 break
@@ -822,8 +831,8 @@ def train_imp_gan(opt):
         x_pred_train = np.array(x_pred_train)
         train_mse = np.mean((x_true_train-x_pred_train)**2)
         train_task_score = f1_score(y_true_train,y_pred_train,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
-            epoch, opt.epochs, train_mse, train_task_score))
+        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+            epoch, opt.epochs, time.time()-epoch_time,train_mse, train_task_score))
 
         # Update Learning Rate
         if epoch != 0 and (epoch % opt.decay_every == 0):
@@ -836,6 +845,7 @@ def train_imp_gan(opt):
         y_true_test = np.array([], dtype='int32')
         y_pred_test = np.array([], dtype='int32')
         bar = Bar('>>>', fill='>', max=n_steps_test)
+        epoch_time = time.time()
         for step,(x_m,mask,x,y) in enumerate(test_ds):
             step_time = time.time()
             x_m_mask = tf.concat([x_m,mask],axis=-1)
@@ -859,8 +869,8 @@ def train_imp_gan(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}]  mse:{:.6f}, f1_score:{:.6f} ".format(
-            epoch, opt.epochs, test_mse, test_task_score))
+        print("Epoch: [{}/{}]  time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+            epoch, opt.epochs, time.time()-epoch_time, test_mse, test_task_score))
         if opt.cont:
             if opt.fixed:
                 str_imp = 'imp-cont-fixed-'
