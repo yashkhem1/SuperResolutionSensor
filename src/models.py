@@ -437,7 +437,8 @@ def audio_clf_model(inp_shape,nclasses):
     input_length = inp_shape[0]
     n = Conv1D(filters, 13, 1, padding='same', kernel_initializer='he_normal')(inp)
     n = PReLU()(n)
-    n = Conv1D(filters, 13, 3, padding='same', kernel_initializer='he_normal')(n)
+    n = Conv1D(filters, 13, 1, padding='same', kernel_initializer='he_normal')(n)
+    n = MaxPooling1D(pool_size=3)(n)
     n = Dropout(0.5)(n)
     n = PReLU()(n)
     input_length/=3
@@ -445,13 +446,14 @@ def audio_clf_model(inp_shape,nclasses):
     for i in range(len(outfilters)):
         n = Conv1D(outfilters[i], 13-2*(i+1), 1, padding='same', kernel_initializer='he_normal')(n)
         n = PReLU()(n)
-        n = Conv1D(outfilters[i], 13-2*(i+1), 3, padding='same', kernel_initializer='he_normal')(n)
+        n = Conv1D(outfilters[i], 13-2*(i+1), 1, padding='same', kernel_initializer='he_normal')(n)
+        n = MaxPooling1D(pool_size=3)(n)
         n = Dropout(0.5)(n)
         input_length/=3
         n = PReLU()(n)
 
     n = Flatten()(n)
-    n = Dense(128)(n)
+    n = Dense(256)(n)
     n = PReLU()(n)
     n = Dense(nclasses)(n)
 
