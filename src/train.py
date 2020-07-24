@@ -290,7 +290,7 @@ def train_sr(opt):
                     p_f = P(hr_f,training=False)
                     p_r = P(hr,training=False)
                     loss_pr = MeanSquaredError()(p_r,p_f)
-                loss_g = loss_mse + 1e-3*loss_pr
+                loss_g = loss_mse + opt.pl_lambda*loss_pr
 
             grad = tape.gradient(loss_g,G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
@@ -458,7 +458,7 @@ def train_sr_gan(opt):
                     p_r = P(hr,training=False)
                     loss_pr = MeanSquaredError()(p_r,p_f)
 
-                loss_g = loss_mse + 1e-3*loss_pr + 1e-3*loss_gen
+                loss_g = loss_mse + opt.pl_lambda*loss_pr + opt.gen_lambda*loss_gen
 
 
             grad = gen_tape.gradient(loss_g,G.trainable_weights)
@@ -478,8 +478,7 @@ def train_sr_gan(opt):
             y_pred = np.argmax(C(hr_f,training=False),axis=1)
             y_true_train = np.append(y_true_train, y_true)
             y_pred_train = np.append(y_pred_train, y_pred)
-            bar.suffix = '''Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, p_loss:{:.6f}, adv:{:.6f},
-             d_f_loss:{:.6f}, d_r_loss:{:.6f},  g_pen:{:.6f}'''.format(epoch,
+            bar.suffix = "Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse:{:.6f}, p_loss:{:.6f}, adv:{:.6f},d_f_loss:{:.6f}, d_r_loss:{:.6f},  g_pen:{:.6f}".format(epoch,
                                                                        opt.epochs, step, n_steps_train,
                                                                        time.time() - step_time, loss_mse, loss_pr,
                                                                        loss_gen, f_loss, r_loss, grad_p)
@@ -608,7 +607,7 @@ def train_imp(opt):
                     p_f = P(x_pred_orig,training=False)
                     p_r = P(x,training=False)
                     loss_pr = MeanSquaredError()(p_r,p_f)
-                loss_g = loss_mse + 1e-3*loss_pr
+                loss_g = loss_mse + opt.pl_lambda*loss_pr
 
             grad = tape.gradient(loss_g,G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
@@ -801,7 +800,7 @@ def train_imp_gan(opt):
                     p_r = P(x,training=False)
                     loss_pr = MeanSquaredError()(p_r,p_f)
 
-                loss_g = loss_mse + 1e-3*loss_pr + 1e-3*loss_gen
+                loss_g = loss_mse + opt.pl_lambda*loss_pr + opt.gen_lambda*loss_gen
 
             grad = gen_tape.gradient(loss_g,G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))

@@ -39,7 +39,6 @@ class Options:
         # ===============================================================
         self.parser.add_argument('--gan_type', type=str,default='normal',help='Type of GAN Loss', choices=['normal','wgan','wgangp','normalls'])
         self.parser.add_argument('--clip_value',type=float,default=0.01,help='Clip value for WGAN')
-        self.parser.add_argument('--gp_lambda',type=float,default=10,help='Multiplier for Gradient Penalty')
 
         # ===============================================================
         #                     Super Resolution Options
@@ -52,13 +51,19 @@ class Options:
         # ===============================================================
         #                 Missing Data Imputation Options
         # ===============================================================
-        self.parser.add_argument('-seed', type=int, default=1, help='Random Seed for missing data')
+        self.parser.add_argument('--seed', type=int, default=1, help='Random Seed for missing data')
         self.parser.add_argument('--prob', type=float, default=0.0, help='Probability of missing data')
         self.parser.add_argument('--masked_mse_loss', type=int, default=1, help='Use MSE loss between imputed values')
         self.parser.add_argument('--cont', type=int, default=1, help='Continuous chunk missing')
         self.parser.add_argument('--use_imp_clf', type=int, default=0, help='Use missing_data_imputation for classification')
         self.parser.add_argument('--fixed', type=int, default=0, help='Fix the training dataset for imputation')
 
+        # ===============================================================
+        #                Loss Weights
+        # ===============================================================
+        self.parser.add_argument('--pl_lambda', type=float, default= 1e-4, help='Weight for perception loss')
+        self.parser.add_argument('--gen_lambda', type=float, default= 1e-5, help='Weight for generator loss')
+        self.parser.add_argument('--gp_lambda', type=float, default= 10, help='Weight for Gradient Penalty')
 
 
     def _print(self):
