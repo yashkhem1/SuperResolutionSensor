@@ -169,7 +169,7 @@ def train_clf(opt):
 
         accuracy_test = accuracy_score(y_true_test,y_pred_test)
         f1_test = f1_score(y_true_test,y_pred_test,average='macro')
-        print("Epoch: [{}/{}] time:{:.1f}s, test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, time.time()-epoch_time, accuracy_test, f1_test))
+        print("Testing Epoch: [{}/{}] time:{:.1f}s, test_accuracy:{:.6f}, test_f1_score:{:.6f}".format(epoch, opt.epochs, time.time()-epoch_time, accuracy_test, f1_test))
         if opt.use_sr_clf:
             model_defs = opt.model_path.split('/')[-1].split('_')
             sr_string = model_defs[1]
@@ -342,11 +342,11 @@ def train_sr(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+        print("Testing Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, time.time()-epoch_time,test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.hdf5'))
-            print('Saving Best generator with best MSE:'+ str(test_mse))
+            print('Saving Best classifier with best MSE:'+ str(test_mse))
             prev_best = test_mse
         G.save(os.path.join(opt.save_dir,'last_cnn_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.hdf5'))
 
@@ -523,7 +523,7 @@ def train_sr_gan(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test - x_pred_test)**2)
         test_task_score = f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+        print("Testing Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, time.time()-epoch_time,test_mse, test_task_score))
         if test_mse < prev_best:
             G.save(os.path.join(opt.save_dir,'best_gen-'+str(opt.gan_type)+'_'+str(opt.data_type)+'_'+str(opt.sampling_ratio)+'_'+str(opt.use_perception_loss)+'.hdf5'))
@@ -665,7 +665,7 @@ def train_imp(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+        print("Testing Epoch: [{}/{}] time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs,time.time()-epoch_time, test_mse, test_task_score))
         if opt.cont:
             if opt.fixed:
@@ -869,7 +869,7 @@ def train_imp_gan(opt):
         x_pred_test = np.array(x_pred_test)
         test_mse = np.mean((x_true_test- x_pred_test)**2)
         test_task_score= f1_score(y_true_test, y_pred_test,average='macro')
-        print("Epoch: [{}/{}]  time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
+        print("Testing Epoch: [{}/{}]  time:{:.1f}s, mse:{:.6f}, f1_score:{:.6f} ".format(
             epoch, opt.epochs, time.time()-epoch_time, test_mse, test_task_score))
         if opt.cont:
             if opt.fixed:
