@@ -236,7 +236,7 @@ def read_test_data(data_type):
         return test_X, test_Y
 
     # ------------------------------------PAM2-------------------------------------------------------------#
-    elif data_type == 'PAM2':
+    elif data_type == 'pam2':
         #read from numpy file
         test_X = np.load('data/X_test_PAM2.npy')
         test_Y = np.load('data/y_test_PAM2.npy')
