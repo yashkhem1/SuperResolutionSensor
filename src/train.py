@@ -180,7 +180,7 @@ def train_clf(opt):
         if opt.use_sr_clf:
             model_defs = opt.model_path.split('/')[-1].split('_')
             sr_string = model_defs[1]
-            use_perception = model_defs[4][:-3]
+            use_perception = model_defs[4][:-5]
 
         elif opt.interp:
             sr_string = opt.interp_type
@@ -197,7 +197,7 @@ def train_clf(opt):
                 model_defs = opt.model_path.split('/')[-1].split('_')
                 imp_string = model_defs[1]
                 use_perception = model_defs[4]
-                masked_loss = model_defs[5][:-3]
+                masked_loss = model_defs[5][:-5]
             else:
                 imp_string = '0'
                 use_perception = '0'
