@@ -126,6 +126,41 @@ def audio_sr_model(inp_shape,sampling_ratio):
     gen = Model(inputs=inp, outputs=n, name='SR_generator')
     return gen
 
+def pam2_sr_model(inp_shape,sampling_ratio):
+    '''
+    Super Resolution Model for SHL Dataset
+    :param inp_shape: Tuple(int)
+    :param sampling_ratio: int
+    :return: Keras Model
+    '''
+    inp = Input(shape=inp_shape)
+    n = Conv2D(32, (1,3), (1,1), padding='same', activation='relu', kernel_initializer='he_normal')(inp)
+    temp = n
+
+    for i in range(4):  # Number of residual blocks
+        nn = Conv2D(32, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        nn = BatchNormalization()(nn)
+        nn = PReLU()(nn)
+        nn = Conv2D(32, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(nn)
+        nn = BatchNormalization()(nn)
+        nn = Add()([n, nn])
+        n = nn
+
+    n = Conv2D(32, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+    n = BatchNormalization()(n)
+    n = Add()([n, temp])
+
+    n_upsample = int(np.log2(sampling_ratio))
+    for i in range(n_upsample):
+        n = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = UpSampling2D(size=(1,2))(n)
+        n = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = PReLU()(n)
+
+    n = Conv2D(1, (1,1), (1,1), padding='same', kernel_initializer='he_normal')(n)
+    gen = Model(inputs=inp, outputs=n, name='SR_generator_PAM2')
+    return gen
+
 
 #-------------------------------------------------------Missing Data ---------------------------------------------------------------------
 def ecg_imp_model(inp_shape):
@@ -244,7 +279,47 @@ def audio_imp_model(inp_shape):
 
 
     n = Conv1D(1,1,1,padding='same', kernel_initializer='he_normal')(n)
-    gen = Model(inputs=inp, outputs=n, name='Imp_Generator')
+    gen = Model(inputs=inp, outputs=n, name='Imp_Generator_Audio')
+    return gen
+
+
+def pam2_imp_model(inp_shape):
+    '''
+    Imputation model for SHL Dataset
+    :param inp_shape: Tuple(int)
+    :return: Keras Model
+    '''
+    inp = Input(shape=inp_shape)
+    outfilters = [32, 64, 128]
+    filters = 16
+    n = Conv2D(filters, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(inp)
+    n = BatchNormalization()(n)
+    n = PReLU()(n)
+    down_array = [n]
+
+    for i in range(len(outfilters)):
+        n = Conv2D(outfilters[i], (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+        n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+        down_array.append(n)
+
+    outfilters.reverse()
+    outfilters.append(filters)
+
+    for i in range(1,len(outfilters)):
+        n = UpSampling2D(size=(1,2))(n)
+        n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = PReLU()(n)
+        n = concatenate([n,down_array[len(outfilters)-i-1]],axis=-1)
+        n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+
+    n = Conv2D(1,(1,1),(1,1),padding='same', kernel_initializer='he_normal')(n)
+    gen = Model(inputs=inp, outputs=n, name='Imp_Generator_PAM2')
     return gen
 
 #-------------------------------------------------------Discriminator ---------------------------------------------------------------------
@@ -346,8 +421,41 @@ def audio_disc_model(inp_shape):
     n = Dense(1)(n)
     # n = Activation('sigmoid')(n)
 
-    disc = Model(inputs=inp, outputs=n, name='Discriminator')
+    disc = Model(inputs=inp, outputs=n, name='Discriminator_Audio')
     return disc
+
+def pam2_disc_model(inp_shape):
+    '''
+    Discriminator Model for SHL Dataset
+    :param inp_shape: Tuple(int)
+    :return: Keras Model
+    '''
+    inp = Input(shape=inp_shape)
+    outfilters = [16,32]
+    filters = 16
+    n = Conv2D(filters, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(inp)
+    n = LeakyReLU()(n)
+    n = Conv2D(filters, (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+    # n = BatchNormalization()(n)
+    n = LeakyReLU()(n)
+
+    for i in range(len(outfilters)):
+        n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        # n = BatchNormalization()(n)
+        n = LeakyReLU()(n)
+        n = Conv2D(outfilters[i], (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+        # n = BatchNormalization()(n)
+        n = LeakyReLU()(n)
+
+    n = Flatten()(n)
+    n = Dense(32)(n)
+    n = LeakyReLU()(n)
+    n = Dense(1)(n)
+    # n = Activation('sigmoid')(n)
+
+    disc = Model(inputs=inp, outputs=n, name='Discriminator_PAM2')
+    return disc
+
 
 #-------------------------------------------------------Classification ---------------------------------------------------------------------
 
@@ -415,7 +523,7 @@ def shl_clf_model(inp_shape,nclasses):
             n = Conv2D(outfilters[i], (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
             input_length /= 2
         else:
-            n = Conv2D(outfilters[i], (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+            n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = BatchNormalization()(n)
         n = PReLU()(n)
 
@@ -459,8 +567,47 @@ def audio_clf_model(inp_shape,nclasses):
     n = Dense(256)(n)
     n = ReLU()(n)
     n = Dense(nclasses)(n)
-    clf = Model(inputs=inp, outputs=n, name='Classifier')
+    clf = Model(inputs=inp, outputs=n, name='Classifier_Audio')
     return clf
+
+def pam2_clf_model(inp_shape,nclasses):
+    '''
+    Classification Model for SHL Dataset
+    :param inp_shape: Tuple(int)
+    :param nclasses: Number of classes for classification
+    :return: Keras Model
+    '''
+    inp = Input(shape=inp_shape)
+    outfilters = [16, 32, 64]
+    filters = 16
+    input_length = inp_shape[1]
+    n = Conv2D(filters, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(inp)
+    n = LeakyReLU()(n)
+    n = Conv2D(filters, (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+    n = BatchNormalization()(n)
+    n = LeakyReLU()(n)
+    input_length /= 2
+
+    for i in range(len(outfilters)):
+        n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = LeakyReLU()(n)
+        if input_length % 2 == 0:
+            n = Conv2D(outfilters[i], (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
+            input_length /= 2
+        else:
+            n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = BatchNormalization()(n)
+        n = LeakyReLU()(n)
+
+    n = Flatten()(n)
+    n = Dense(32)(n)
+    n = LeakyReLU()(n)
+    n = Dense(nclasses)(n)
+
+    clf = Model(inputs=inp, outputs=n, name='Classifier_PAM2')
+    return clf
+
 def sr_model_func(data_type):
     '''
     Returns super resolution model architecture for the given data type
@@ -475,6 +622,9 @@ def sr_model_func(data_type):
     
     elif data_type == 'audio':
         return audio_sr_model
+
+    elif data_type == 'pam2':
+        return pam2_sr_model
 
 def imp_model_func(data_type):
     '''
@@ -491,6 +641,9 @@ def imp_model_func(data_type):
     elif data_type=='audio':
         return audio_imp_model
 
+    elif data_type== 'pam2':
+        return pam2_imp_model
+
 def disc_model_func(data_type):
     '''
     Returns discriminator model architecture for the given data type
@@ -503,6 +656,8 @@ def disc_model_func(data_type):
         return shl_disc_model
     elif data_type=='audio':
         return audio_disc_model
+    elif data_type=='pam2':
+        return pam2_disc_model
 
 
 def clf_model_func(data_type):
@@ -513,12 +668,13 @@ def clf_model_func(data_type):
     '''
     if data_type=='ecg':
         return ecg_clf_model
-
     elif data_type=='shl':
         return shl_clf_model
-
     elif data_type=='audio':
         return audio_clf_model
+    elif data_type=='pam2':
+        return pam2_clf_model
+
 
 
 

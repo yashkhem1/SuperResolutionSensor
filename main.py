@@ -1,6 +1,7 @@
 from src.parsing import Options
 from src.train import train_clf, train_sr, train_sr_gan, train_imp, train_imp_gan
-from src.evaluate import evaluate_clf, evaluate_ecg_sr, evaluate_ecg_imp, evaluate_shl_imp, evaluate_shl_sr,evaluate_audio_imp,evaluate_audio_sr
+from src.evaluate import evaluate_clf, evaluate_ecg_sr, evaluate_ecg_imp, evaluate_shl_imp, evaluate_shl_sr,\
+    evaluate_audio_imp,evaluate_audio_sr, evaluate_pam2_imp, evaluate_pam2_sr
 import os
 
 if __name__ == "__main__":
@@ -26,6 +27,10 @@ if __name__ == "__main__":
             elif opt.data_type=='audio':
                 evaluate_audio_sr(opt)
 
+            elif opt.data_type=='pam2':
+                evaluate_pam2_sr(opt)
+
+
         elif opt.model_type in ['imp','imp_gan']:
             if opt.data_type=='ecg':
                 evaluate_ecg_imp(opt)
@@ -35,6 +40,9 @@ if __name__ == "__main__":
 
             elif opt.data_type=='audio':
                 evaluate_audio_imp(opt)
+
+            elif opt.model_type=='pam2':
+                evaluate_pam2_imp(opt)
 
     elif opt.model_type == 'clf':
         train_clf(opt)

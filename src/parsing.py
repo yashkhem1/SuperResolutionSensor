@@ -10,7 +10,7 @@ class Options:
         # ===============================================================
         #                     General options
         # ===============================================================
-        self.parser.add_argument('--data_type' , type=str, help='Dataset Type', choices=['ecg','shl','audio'])
+        self.parser.add_argument('--data_type' , type=str, help='Dataset Type', choices=['ecg','shl','audio','pam2'])
         self.parser.add_argument('--init_lr', type=float,  default=0.0001 , help='Initial Learning Rate for the model')
         self.parser.add_argument('--epochs', type=int, default=100, help='Number of epochs in training')
         self.parser.add_argument('--decay_half', type=int, default=0, help='Decay learning rate after half the epochs')

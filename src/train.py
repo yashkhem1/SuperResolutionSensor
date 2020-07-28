@@ -83,6 +83,13 @@ def train_clf(opt):
         nclasses =  10
         C = clf_model_func('audio')(inp_shape,nclasses)
 
+    elif opt.data_type == 'pam2':
+        inp_shape = (27,512//opt.sampling_ratio,1)
+        if opt.use_sr_clf or opt.interp:
+            inp_shape = (27,512,1)
+        nclasses = 12
+        C = clf_model_func('pam2')(inp_shape,nclasses)
+
     print(C.summary())
     lr_v = tf.Variable(opt.init_lr)
     c_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
@@ -257,6 +264,14 @@ def train_sr(opt):
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
+    elif opt.data_type == 'pam2':
+        inp_shape = (27,512//opt.sampling_ratio,1)
+        nclasses =  12
+        G = sr_model_func('pam2')(inp_shape,opt.sampling_ratio)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
 
     print(G.summary())
     lr_v = tf.Variable(opt.init_lr)
@@ -388,6 +403,16 @@ def train_sr_gan(opt):
         nclasses =  10
         G = sr_model_func('audio')(inp_shape,opt.sampling_ratio)
         D = disc_model_func('audio')(inp_disc_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
+    elif opt.data_type == 'pam2':
+        inp_shape = (27,512//opt.sampling_ratio,1)
+        inp_disc_shape = (27,512,1)
+        nclasses =  12
+        G = sr_model_func('pam2')(inp_shape,opt.sampling_ratio)
+        D = disc_model_func('pam2')(inp_disc_shape)
         C = load_model(opt.classifier_path)
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
@@ -570,6 +595,14 @@ def train_imp(opt):
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
 
+    elif opt.data_type == 'pam2':
+        inp_shape = (27,512,2)
+        nclasses =  12
+        G = imp_model_func('pam2')(inp_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
     print(G.summary())
     lr_v = tf.Variable(opt.init_lr)
     g_optimizer = tf.optimizers.Adam(lr_v, beta_1=opt.beta1)
@@ -719,6 +752,16 @@ def train_imp_gan(opt):
         nclasses =  10
         G = imp_model_func('audio')(inp_shape)
         D = disc_model_func('audio')(inp_disc_shape)
+        C = load_model(opt.classifier_path)
+        if opt.use_perception_loss:
+            P = Model(inputs = C.input, outputs = C.layers[-3].output)
+
+    elif opt.data_type == 'pam2':
+        inp_shape = (27,512,2)
+        inp_disc_shape = (27,512,1)
+        nclasses =  12
+        G = imp_model_func('pam2')(inp_shape)
+        D = disc_model_func('pam2')(inp_disc_shape)
         C = load_model(opt.classifier_path)
         if opt.use_perception_loss:
             P = Model(inputs = C.input, outputs = C.layers[-3].output)
