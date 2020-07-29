@@ -5,6 +5,7 @@ from tensorflow.keras.models import load_model
 from sklearn.metrics import mean_squared_error, accuracy_score, f1_score, confusion_matrix
 from scipy import interpolate
 
+#--------------------------------Classification------------------------------------------------------------------------
 def evaluate_clf(opt):
     C = load_model(opt.classifier_path)
     test_X,test_Y = read_test_data(opt.data_type)
@@ -131,21 +132,21 @@ def evaluate_clf(opt):
                 G = load_model(opt.model_path)
                 test_X = G.predict(test_X, batch_size=opt.test_batch_size, verbose=1)
             if opt.interp:
-                interp_indices = np.arange(0, 512, opt.sampling_ratio)
+                interp_indices = np.arange(0, 256, opt.sampling_ratio)
                 inter_func = interpolate.interp1d(interp_indices, test_X, axis=2, kind=opt.interp_type,
                                                   fill_value='extrapolate')
-                test_X = inter_func(np.arange(0, 512))
+                test_X = inter_func(np.arange(0, 256))
 
         if opt.prob != 0:
             np.random.seed(opt.seed)
-            indices = np.arange(512)
-            n_missing = int(opt.prob * 512)
+            indices = np.arange(256)
+            n_missing = int(opt.prob * 256)
             test_X_m = np.zeros(test_X.shape)
             test_mask = np.ones(test_X.shape)
             for i, data in enumerate(test_X):
                 for j in range(27):
                     if opt.cont:
-                        missing_start = np.random.randint(0, int((1 - opt.prob) * 512) + 1)
+                        missing_start = np.random.randint(0, int((1 - opt.prob) * 256) + 1)
                         missing_indices = np.arange(missing_start, missing_start + n_missing)
                     else:
                         missing_indices = np.random.choice(indices, n_missing, replace=False)
@@ -171,6 +172,8 @@ def evaluate_clf(opt):
     print('F1_score: ', f1)
     print('Confusion Matrix: ', cf_matrix)
 
+
+#--------------------------------Super Resolution------------------------------------------------------------------------
 def evaluate_ecg_sr(opt):
     if not opt.interp:
         G = load_model(opt.model_path)
@@ -247,9 +250,9 @@ def evaluate_pam2_sr(opt):
     test_X,test_Y = read_test_data(opt.data_type)
     x_true = test_X
     if opt.interp:
-        interp_indices = np.arange(0,512,opt.sampling_ratio)
+        interp_indices = np.arange(0,256,opt.sampling_ratio)
         inter_func = interpolate.interp1d(interp_indices,x_true[:,:,::opt.sampling_ratio, :],axis=2,kind=opt.interp_type, fill_value='extrapolate')
-        x_pred = inter_func(np.arange(0,512))
+        x_pred = inter_func(np.arange(0,256))
     else:
         x_pred = G.predict(x_true[:,:,::opt.sampling_ratio, :],batch_size=opt.test_batch_size,verbose=1)
     y_true = np.argmax(test_Y,axis=1)
@@ -264,6 +267,7 @@ def evaluate_pam2_sr(opt):
     print('Confusion Matrix: ', confusion_matrix(y_true, y_pred_sr))
 
 
+#--------------------------------Imputation------------------------------------------------------------------------
 def evaluate_ecg_imp(opt):
     G = load_model(opt.model_path)
     C = load_model(opt.classifier_path)
@@ -373,14 +377,14 @@ def evaluate_pam2_imp(opt):
     test_X, test_Y = read_test_data(opt.data_type)
     x_true = test_X
     np.random.seed(opt.seed)
-    indices = np.arange(512)
-    n_missing = int(opt.prob * 512)
+    indices = np.arange(256)
+    n_missing = int(opt.prob * 256)
     test_X_m = np.zeros(test_X.shape)
     test_mask = np.ones(test_X.shape)
     for i, data in enumerate(test_X):
         for j in range(27):
             if opt.cont:
-                missing_start = np.random.randint(0, int((1 - opt.prob) * 512) + 1)
+                missing_start = np.random.randint(0, int((1 - opt.prob) * 256) + 1)
                 missing_indices = np.arange(missing_start, missing_start + n_missing)
             else:
                 missing_indices = np.random.choice(indices, n_missing, replace=False)

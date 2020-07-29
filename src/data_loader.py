@@ -64,7 +64,7 @@ def get_class_weights(data_type):
 
 
     elif data_type == 'pam2':
-        train_labels = np.argmax(np.load('data/y_train_PAM2.npy'),axis=1)
+        train_labels = np.argmax(np.load('data/y_train_PAMAP2.npy'),axis=1)
         w0 = len(train_labels) / len(train_labels[train_labels== 0])
         w1 = len(train_labels) / len(train_labels[train_labels== 1])
         w2 = len(train_labels) / len(train_labels[train_labels== 2])
@@ -158,15 +158,18 @@ def read_train_data(data_type,rs=False):
     # ------------------------------------PAM2-------------------------------------------------------------#
     elif data_type == 'pam2':
         #read data form numpy file
-        train_X = np.load('data/X_train_PAM2.npy')
-        val_X = np.load('data/X_val_PAM2.npy')
-        train_Y = np.load('data/y_train_PAM2.npy')
-        val_Y = np.load('data/y_val_PAM2.npy')
+        # train_X = np.load('data/X_train_PAM2.npy')
+        # val_X = np.load('data/X_val_PAM2.npy')
+        # train_Y = np.load('data/y_train_PAM2.npy')
+        # val_Y = np.load('data/y_val_PAM2.npy')
+        #
+        # train_X = np.concatenate([train_X,val_X], axis=0)
+        # train_Y = np.concatenate([train_Y,val_Y], axis=0)
 
-        train_X = np.concatenate([train_X,val_X], axis=0)
-        train_Y = np.concatenate([train_Y,val_Y], axis=0)
+        train_X = np.load('data/X_train_PAMAP2.npy')
+        train_Y = np.load('data/y_train_PAMAP2.npy')
 
-        train_X = train_X.reshape(-1,27,512,1)
+        train_X = train_X.reshape(-1,27,256,1)
 
         if rs:
             print("No resampling for PAMAP2 dataset")
@@ -238,10 +241,10 @@ def read_test_data(data_type):
     # ------------------------------------PAM2-------------------------------------------------------------#
     elif data_type == 'pam2':
         #read from numpy file
-        test_X = np.load('data/X_test_PAM2.npy')
-        test_Y = np.load('data/y_test_PAM2.npy')
+        test_X = np.load('data/X_test_PAMAP2.npy')
+        test_Y = np.load('data/y_test_PAMAP2.npy')
 
-        test_X = test_X.reshape(-1,27,512,1)
+        test_X = test_X.reshape(-1,27,256,1)
 
         return test_X, test_Y
 
@@ -390,22 +393,22 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
                 train_X = G.predict(train_X, batch_size=batch_size, verbose=1)
                 print(len(train_X))
             if interp:
-                interp_indices = np.arange(0, 512, sampling_ratio)
+                interp_indices = np.arange(0, 256, sampling_ratio)
                 inter_func = interpolate.interp1d(interp_indices, train_X, axis=2, kind=interp_type,
                                                   fill_value='extrapolate')
-                train_X = inter_func(np.arange(0, 512))
+                train_X = inter_func(np.arange(0, 256))
 
         if prob != 0:
             np.random.seed(seed)
-            indices = np.arange(512)
-            n_missing = int(prob * 512)
+            indices = np.arange(256)
+            n_missing = int(prob * 256)
             if fixed:
                 train_X_m = np.zeros(train_X.shape)
                 train_mask = np.ones(train_X.shape)
                 for i, data in enumerate(train_X):
                     for j in range(27):
                         if cont:
-                            missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                            missing_start = np.random.randint(0, int((1 - prob) * 256) + 1)
                             missing_indices = np.arange(missing_start, missing_start + n_missing)
                         else:
                             missing_indices = np.random.choice(indices, n_missing, replace=False)
@@ -502,7 +505,7 @@ def train_cf_dataset(data_type,sampling_ratio,batch_size,shuffle_buffer_size=100
                 for i, data in enumerate(train_X):
                     for j in range(27):
                         if cont:
-                            missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                            missing_start = np.random.randint(0, int((1 - prob) * 256) + 1)
                             missing_indices = np.arange(missing_start, missing_start + n_missing)
                         else:
                             missing_indices = np.random.choice(indices, n_missing, replace=False)
@@ -673,21 +676,21 @@ def test_cf_dataset(data_type,sampling_ratio,batch_size,fetch_buffer_size=2, sr_
                 print(len(test_X))
 
             if interp:
-                interp_indices = np.arange(0, 512, sampling_ratio)
+                interp_indices = np.arange(0, 256, sampling_ratio)
                 inter_func = interpolate.interp1d(interp_indices, test_X, axis=2, kind=interp_type,
                                                   fill_value='extrapolate')
-                test_X = inter_func(np.arange(0, 512))
+                test_X = inter_func(np.arange(0, 256))
 
         if prob != 0:
             np.random.seed(seed)
-            indices = np.arange(512)
-            n_missing = int(prob * 512)
+            indices = np.arange(256)
+            n_missing = int(prob * 256)
             test_X_m = np.zeros(test_X.shape)
             test_mask = np.ones(test_X.shape)
             for i, data in enumerate(test_X):
                 for j in range(27):
                     if cont:
-                        missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                        missing_start = np.random.randint(0, int((1 - prob) * 256) + 1)
                         missing_indices = np.arange(missing_start, missing_start + n_missing)
                     else:
                         missing_indices = np.random.choice(indices, n_missing, replace=False)
@@ -858,15 +861,15 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
     # ------------------------------------PAM2-------------------------------------------------------------#
 
     elif data_type == 'pam2':
-        indices = np.arange(512)
-        n_missing = int(prob * 512)
+        indices = np.arange(256)
+        n_missing = int(prob * 256)
         if fixed:
             train_X_m = np.zeros(train_X.shape)
             train_mask = np.ones(train_X.shape)
             for i, data in enumerate(train_X):
                 for j in range(27):
                     if cont:
-                        missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                        missing_start = np.random.randint(0, int((1 - prob) * 256) + 1)
                         missing_indices = np.arange(missing_start, missing_start + n_missing)
                     else:
                         missing_indices = np.random.choice(indices, n_missing, replace=False)
@@ -925,14 +928,14 @@ def train_imp_dataset(data_type,batch_size, prob, seed, cont=False, fixed=False,
                     train_mask_sample[missing_indices] = 0
                     yield train_X_m_sample, train_mask_sample, train_X[i], train_Y[i]
 
-                # ------------------------------------SHL-------------------------------------------------------------#
+                # ------------------------------------PAM2-------------------------------------------------------------#
                 elif data_type == 'pam2':
                     sample = train_X[i]
                     train_mask_sample = np.ones(sample.shape)
                     train_X_m_sample = sample.copy()
                     for j in range(27):
                         if cont:
-                            missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                            missing_start = np.random.randint(0, int((1 - prob) * 256) + 1)
                             missing_indices = np.arange(missing_start, missing_start + n_missing)
                         else:
                             missing_indices = np.random.choice(indices, n_missing, replace=False)
@@ -1009,17 +1012,17 @@ def test_imp_dataset(data_type,batch_size,prob,seed,cont=False,fetch_buffer_size
             test_X_m[i][missing_indices] = 0
             test_mask[i][missing_indices] = 0
 
-    # ------------------------------------SHL-------------------------------------------------------------#
+    # ------------------------------------PAM2-------------------------------------------------------------#
     elif data_type == 'shl':
         np.random.seed(seed)
-        indices = np.arange(512)
-        n_missing = int(prob * 512)
+        indices = np.arange(256)
+        n_missing = int(prob * 256)
         test_X_m = np.zeros(test_X.shape)
         test_mask = np.ones(test_X.shape)
         for i, data in enumerate(test_X):
             for j in range(27):
                 if cont:
-                    missing_start = np.random.randint(0, int((1 - prob) * 512) + 1)
+                    missing_start = np.random.randint(0, int((1 - prob) * 256) + 1)
                     missing_indices = np.arange(missing_start, missing_start + n_missing)
                 else:
                     missing_indices = np.random.choice(indices, n_missing, replace=False)
