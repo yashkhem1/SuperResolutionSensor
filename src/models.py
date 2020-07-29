@@ -592,7 +592,7 @@ def pam2_clf_model(inp_shape,nclasses):
         n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = BatchNormalization()(n)
         n = LeakyReLU()(n)
-        if input_length % 2 == 0:
+        if input_length % 8 == 0:
             n = Conv2D(outfilters[i], (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
             input_length /= 2
         else:
