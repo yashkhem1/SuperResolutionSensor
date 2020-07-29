@@ -140,7 +140,7 @@ def pam2_sr_model(inp_shape,sampling_ratio):
     for i in range(4):  # Number of residual blocks
         nn = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         nn = BatchNormalization()(nn)
-        nn = LeakyReLU()(nn)
+        nn = PReLU()(nn)
         nn = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(nn)
         nn = BatchNormalization()(nn)
         nn = Add()([n, nn])
@@ -155,7 +155,7 @@ def pam2_sr_model(inp_shape,sampling_ratio):
         n = Conv2D(128, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = UpSampling2D(size=(1,2))(n)
         n = Conv2D(128, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
-        n = LeakyReLU()(n)
+        n = PReLU()(n)
 
     n = Conv2D(1, (1,1), (1,1), padding='same', kernel_initializer='he_normal')(n)
     gen = Model(inputs=inp, outputs=n, name='SR_generator_PAM2')
@@ -294,16 +294,15 @@ def pam2_imp_model(inp_shape):
     filters = 16
     n = Conv2D(filters, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(inp)
     n = BatchNormalization()(n)
-    n = LeakyReLU()(n)
+    n = PReLU()(n)
     down_array = [n]
 
     for i in range(len(outfilters)):
         n = Conv2D(outfilters[i], (1,3), (1,2), padding='same', kernel_initializer='he_normal')(n)
         n = BatchNormalization()(n)
-        n = LeakyReLU()(n)
         n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = BatchNormalization()(n)
-        n = LeakyReLU()(n)
+        n = PReLU()(n)
         down_array.append(n)
 
     outfilters.reverse()
@@ -313,10 +312,10 @@ def pam2_imp_model(inp_shape):
         n = UpSampling2D(size=(1,2))(n)
         n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = BatchNormalization()(n)
-        n = LeakyReLU()(n)
         n = concatenate([n,down_array[len(outfilters)-i-1]],axis=-1)
         n = Conv2D(outfilters[i], (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = BatchNormalization()(n)
+        n = PReLU()(n)
 
     n = Conv2D(1,(1,1),(1,1),padding='same', kernel_initializer='he_normal')(n)
     gen = Model(inputs=inp, outputs=n, name='Imp_Generator_PAM2')
