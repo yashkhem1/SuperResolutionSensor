@@ -138,23 +138,23 @@ def pam2_sr_model(inp_shape,sampling_ratio):
     temp = n
 
     for i in range(4):  # Number of residual blocks
-        nn = Conv2D(32, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        nn = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         nn = BatchNormalization()(nn)
         nn = LeakyReLU()(nn)
-        nn = Conv2D(32, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(nn)
+        nn = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(nn)
         nn = BatchNormalization()(nn)
         nn = Add()([n, nn])
         n = nn
 
-    n = Conv2D(32, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+    n = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
     n = BatchNormalization()(n)
     n = Add()([n, temp])
 
     n_upsample = int(np.log2(sampling_ratio))
     for i in range(n_upsample):
-        n = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = Conv2D(128, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = UpSampling2D(size=(1,2))(n)
-        n = Conv2D(64, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
+        n = Conv2D(128, (1,3), (1,1), padding='same', kernel_initializer='he_normal')(n)
         n = LeakyReLU()(n)
 
     n = Conv2D(1, (1,1), (1,1), padding='same', kernel_initializer='he_normal')(n)
