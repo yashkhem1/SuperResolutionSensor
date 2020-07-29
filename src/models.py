@@ -134,7 +134,7 @@ def pam2_sr_model(inp_shape,sampling_ratio):
     :return: Keras Model
     '''
     inp = Input(shape=inp_shape)
-    n = Conv2D(32, (1,3), (1,1), padding='same', activation='relu', kernel_initializer='he_normal')(inp)
+    n = Conv2D(64, (1,3), (1,1), padding='same', activation='relu', kernel_initializer='he_normal')(inp)
     temp = n
 
     for i in range(4):  # Number of residual blocks
